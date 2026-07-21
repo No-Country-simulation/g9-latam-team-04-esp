@@ -1,0 +1,144 @@
+name: PR Conventions
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-conventions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-conventions:
+    name: pr-conventions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR title and branch name
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          import sys
+
+          event_path = os.environ["GITHUB_EVENT_PATH"]
+
+          with open(event_path, "r", encoding="utf-8") as file:
+              event = json.load(file)
+
+          pr = event["pull_request"]
+
+          title = pr["title"].strip()
+          branch = pr["head"]["ref"].strip()
+
+          # Bypass validation for main system branches (develop and main)
+          if branch in ["main", "develop"]:
+              print(f"Skipping PR conventions check for system branch: {branch}")
+              sys.exit(0)
+
+          allowed_types = [
+              "feat",
+              "fix",
+              "docs",
+              "style",
+              "refactor",
+              "perf",
+              "test",
+              "build",
+              "chore",
+              "ci",
+              "revert",
+              "deps",
+          ]
+
+          # Pattern matches conventional commits and requires the Trello ID in parentheses at the end:
+          # e.g., "feat(api): agregar endpoint de clasificacion (BE-01)"
+          title_pattern = re.compile(
+              r"^(feat|fix|docs|style|refactor|perf|test|build|chore|ci|revert|deps)"
+              r"(\([a-z0-9-]+\))?: .{8,} \([A-Za-z]+-[0-9]+\)$"
+          )
+
+          # Pattern matches branch naming convention: <type>/<trello-id>/<description>
+          # e.g., "feature/BE-01/configurar-fastapi"
+          branch_pattern = re.compile(
+              r"^(feature|fix|docs|test|refactor|chore|hotfix)/([A-Za-z]+-[0-9]+|[0-9]+)/([a-z0-9-]+)$"
+          )
+
+          errors = []
+
+          title_match = title_pattern.match(title)
+          if not title_match:
+              errors.append(
+                  "Titulo del PR invalido.\n"
+                  "Formato esperado:\n"
+                  "  tipo(alcance): descripcion (ID-Trello)\n\n"
+                  "Ejemplos validos:\n"
+                  "  feat(api): agregar endpoint de clasificacion (BE-02)\n"
+                  "  feat(data): crear dataset de contenido tecnico (DS-01)\n"
+                  "  docs(project): actualizar readme del proyecto (DS-01)\n\n"
+                  f"Tipos permitidos: {', '.join(allowed_types)}"
+              )
+
+          branch_match = branch_pattern.match(branch)
+          if not branch_match:
+              errors.append(
+                  "Nombre de rama invalido.\n"
+                  "Formato esperado:\n"
+                  "  tipo/ID-tarjeta/descripcion-corta\n\n"
+                  "Ejemplos validos:\n"
+                  "  feature/BE-01/configurar-fastapi\n"
+                  "  feature/DS-01/crear-dataset\n"
+                  "  fix/BE-02/corregir-validacion\n"
+                  "  chore/INFRA-01/configurar-docker\n\n"
+                  "Tipos permitidos en rama: feature, fix, docs, test, refactor, chore, hotfix\n"
+                  "La descripcion debe contener solo minusculas y guiones."
+              )
+
+          # Verify that the Trello ID in the PR title matches the one in the branch name
+          if title_match and branch_match:
+              title_issue_match = re.search(r"\(([A-Za-z]+-[0-9]+)\)$", title)
+              title_issue = title_issue_match.group(1) if title_issue_match else None
+              branch_issue = branch_match.group(2)
+
+              if title_issue and branch_issue and title_issue != branch_issue:
+                  errors.append(
+                      f"El ID de Trello en el titulo del PR ({title_issue}) no coincide "
+                      f"con el ID de Trello en la rama ({branch_issue}).\n"
+                      "Deben ser identicos para mantener la trazabilidad."
+                  )
+
+          if title.lower().startswith(("wip:", "draft:")):
+              errors.append(
+                  "Evita los prefijos WIP: o Draft: en el titulo del PR. "
+                  "Usa el modo Draft de GitHub en su lugar."
+              )
+
+          if errors:
+              print("PR no cumple con las convenciones.\n")
+              for index, error in enumerate(errors, start=1):
+                  print(f"{index}. {error}\n")
+
+              print("Datos recibidos:")
+              print(f"  PR title: {title}")
+              print(f"  Branch:   {branch}")
+              sys.exit(1)
+
+          print("PR aprobado en convenciones.")
+          print(f"PR title: {title}")
+          print(f"Branch:   {branch}")
+          PY

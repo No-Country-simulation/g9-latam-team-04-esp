@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Entorno
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data science (raw data pesado)
+data-science/data/raw/*.csv
+
+# SQLite
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Docs
