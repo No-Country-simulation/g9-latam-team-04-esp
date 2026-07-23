@@ -49,6 +49,19 @@ La arquitectura propuesta separa claramente la capa de Ciencia de Datos, la capa
 4. Se calcula la categoría, probabilidad e información adicional.
 5. La API devuelve un JSON consistente y listo para consumo externo.
 
+## Dependencias principales
+
+| Paquete | Versión | Propósito |
+|---------|---------|-----------|
+| fastapi | ≥0.115,<1.0 | Framework web ASGI |
+| uvicorn[standard] | ≥0.34,<1.0 | Servidor ASGI (el que corre la API) |
+| pydantic | ≥2.0,<3.0 | Validación de datos de entrada/salida |
+| pydantic-settings | ≥2.0,<3.0 | Config por variables de entorno |
+| scikit-learn | ≥1.4,<2.0 | Modelo ML: TF-IDF + LogisticRegression |
+| joblib | ≥1.3,<2.0 | Cargar/guardar modelo entrenado |
+| numpy | ≥1.26,<2.0 | Operaciones numéricas del modelo |
+| langdetect | ≥1.0.9,<2.0 | Detectar si el texto es EN o ES |
+
 ## Stack tecnológico
 
 |Capa|Tecnología|
@@ -58,6 +71,7 @@ La arquitectura propuesta separa claramente la capa de Ciencia de Datos, la capa
 |Validación|Pydantic o validación nativa del framework.|
 |OCI|Object Storage, API Gateway, Functions o Compute.|
 |Documentación|README y OpenAPI generada por FastAPI.|
+
 
 ## Categorías del modelo
 
@@ -92,6 +106,12 @@ g9-latam-team-04-esp/
 │   └── requirements.txt
 ├── data/
 ├── data-science/                       → Todo lo relacionado al Modelado, procesamiento y servicio de ML (Python)
+│   ├── data/                           → Archivos de datos (no subir archivos muy pesados)
+│   │   ├── raw/                        → Los textos crudos originales (ej. dataset.csv)
+│   │   └── processed/                  → Los textos limpios listos para entrenar
+│   ├── notebooks/                      → Cuadernos de experimentación, exploración y limpieza de datos, entrenamiento del modelo
+│   ├── models/                         → Modelos ya entrenados y listos para usar
+│   └── requirements.txt                → Librerías de Python (pandas, scikit-learn, etc.)
 ├── frontend/                           → (Opcional) Todo lo relacionado a la Interfaz de Usuario
 ├── infrastructure/                     → Todo lo relacionado a la Infraestructura
 ├── docs/                               → Documentación adicional del proyecto
