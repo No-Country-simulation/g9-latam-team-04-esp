@@ -11,7 +11,7 @@ from typing import Any
 
 import oracledb
 
-from core.config import settings
+from .config import settings
 
 def get_connection() -> oracledb.Connection:
     """Devuelve una conexión a Oracle Database.
@@ -78,10 +78,20 @@ def init_db() -> None:
                     FOREIGN KEY (contenido_id) REFERENCES contenidos(id) ON DELETE CASCADE
                 )
             """)
-            cursor.execute("CREATE INDEX idx_clasif_creado ON clasificaciones(creado_en DESC)")
-            cursor.execute("CREATE INDEX idx_term_palabra ON terminos_clave(palabra)")
-            cursor.execute("CREATE INDEX idx_term_contenido ON terminos_clave(contenido_id)")
+            _crear_indice(cursor, "idx_clasif_creado", "clasificaciones", "creado_en DESC")
+            _crear_indice(cursor, "idx_term_palabra", "terminos_clave", "palabra")
+            _crear_indice(cursor, "idx_term_contenido", "terminos_clave", "contenido_id")
         conn.commit()
+
+def _crear_indice(cursor: oracledb.Cursor, nombre: str, tabla: str, columnas: str) -> None:
+    """Crea un índice si no existe (Oracle no tiene IF NOT EXISTS para índices)."""
+    cursor.execute(
+        "SELECT COUNT(*) FROM user_indexes WHERE index_name = :name",
+        {"name": nombre.upper()},
+    )
+    if cursor.fetchone()[0] == 0:
+        cursor.execute(f"CREATE INDEX {nombre} ON {tabla}({columnas})")
+
 
 def guardar_clasificacion(
     titulo: str,
