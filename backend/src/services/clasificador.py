@@ -1,0 +1,300 @@
+"""
+Servicio de clasificación de contenido técnico.
+
+Maneja dos modelos (inglés / español) con detección automática de idioma.
+Cada modelo tiene su propio TF-IDF y LogisticRegression.
+"""
+
+from __future__ import annotations
+
+import re
+import string
+import unicodedata
+from pathlib import Path
+
+import joblib
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+
+from ..core.config import settings
+
+
+# ── Limpieza de texto
+
+def limpiar_texto_en(texto: str) -> str:
+    """Limpieza para modelo INGLÉS: elimina acentos y diacríticos."""
+    if not texto:
+        return ""
+    texto = str(texto).lower()
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = texto.encode("ASCII", "ignore").decode("utf-8")
+    texto = texto.translate(str.maketrans("", "", string.punctuation))
+    texto = re.sub(r"\d+", "", texto)
+    texto = re.sub(r"\s+", " ", texto)
+    return texto.strip()
+
+
+def limpiar_texto_es(texto: str) -> str:
+    """Limpieza para modelo ESPAÑOL: conserva acentos."""
+    if not texto:
+        return ""
+    texto = str(texto).lower()
+    texto = texto.translate(str.maketrans("", "", string.punctuation))
+    texto = re.sub(r"\d+", "", texto)
+    texto = re.sub(r"\s+", " ", texto)
+    return texto.strip()
+
+
+# ── Detección de idioma
+
+_IDIOMA_MODELO = {"en": "en", "es": "es"}
+
+try:
+    from langdetect import detect as _detect_lang
+
+    def detectar_idioma(texto: str) -> str:
+        """Devuelve 'en', 'es' o 'en' (fallback)."""
+        if not texto.strip():
+            return "en"
+        try:
+            lang = _detect_lang(texto[:500])
+            return lang if lang in _IDIOMA_MODELO else "en"
+        except Exception:
+            return "en"
+
+except ImportError:
+
+    def detectar_idioma(texto: str) -> str:  # type: ignore[misc]
+        """Fallback: siempre inglés."""
+        return "en"
+
+
+# ── Stop words para extracción de términos
+
+_STOP_WORDS_EN: set[str] = {
+    "a", "about", "above", "after", "again", "against", "all", "am", "an",
+    "and", "any", "are", "as", "at", "be", "because", "been", "before",
+    "being", "below", "between", "both", "but", "by", "could", "did", "do",
+    "does", "doing", "down", "during", "each", "few", "for", "from",
+    "further", "had", "has", "have", "having", "he", "her", "here", "hers",
+    "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is",
+    "it", "its", "itself", "just", "me", "more", "most", "my", "myself",
+    "no", "nor", "not", "now", "of", "on", "once", "only", "or", "other",
+    "our", "ours", "ourselves", "out", "over", "own", "per", "same", "she",
+    "should", "so", "some", "such", "than", "that", "the", "their", "theirs",
+    "them", "themselves", "then", "there", "these", "they", "this", "those",
+    "through", "to", "too", "under", "until", "up", "very", "was", "we",
+    "were", "what", "when", "where", "which", "while", "who", "whom", "why",
+    "will", "with", "would", "you", "your", "yours", "yourself", "yourselves",
+}
+
+_STOP_WORDS_ES: set[str] = {
+    "a", "acerca", "ahi", "al", "alguna", "algunas", "algunos", "algo",
+    "alguien", "alli", "ambas", "ambos", "ante", "aquel", "aquella",
+    "aquellos", "aqui", "arriba", "asi", "aun", "aunque", "bajo", "bien",
+    "cabe", "cada", "casi", "como", "con", "contra", "cual", "cuales",
+    "cualquier", "cualquiera", "cuan", "cuando", "cuanto", "de", "del",
+    "demas", "dentro", "desde", "donde", "dos", "e", "el", "ella", "ellas",
+    "ello", "ellos", "embargo", "en", "entre", "era", "eran", "es", "esa",
+    "esas", "ese", "eso", "esos", "esta", "estaba", "estan", "estar",
+    "este", "esto", "etc", "fin", "forma", "fue", "gracias", "ha", "hace",
+    "hacen", "han", "hasta", "hay", "he", "hoy", "la", "las", "le", "les",
+    "lo", "los", "lugar", "mas", "mediante", "mejor", "menos", "mi", "mis",
+    "modo", "mucha", "muchas", "mucho", "muchos", "muy", "nada", "nadie",
+    "ni", "ningun", "ninguna", "ningunas", "ningunos", "no", "nos",
+    "nosotras", "nosotros", "nuestra", "nuestro", "nuevo", "nunca", "o",
+    "os", "otra", "otras", "otro", "otros", "para", "parte", "pero", "poco",
+    "podria", "por", "porque", "primero", "propio", "puede", "pueden",
+    "que", "quien", "quienes", "se", "segun", "ser", "si", "sido",
+    "siempre", "sin", "sobre", "solo", "son", "su", "sus", "tal", "tan",
+    "tambien", "tampoco", "tan", "tanto", "te", "tenemos", "tener",
+    "tiempo", "tiene", "tienen", "tipo", "toda", "todas", "todo", "todos",
+    "tras", "tu", "tus", "u", "un", "una", "unas", "uno", "unos", "usa",
+    "usan", "usar", "usted", "ustedes", "va", "vamos", "van", "varias",
+    "varios", "via", "vos", "vosotras", "vosotros", "voy", "y", "ya", "yo",
+}
+
+_LIMPIEZA_POR_IDIOMA = {"en": limpiar_texto_en, "es": limpiar_texto_es}
+_STOP_WORDS_POR_IDIOMA = {"en": _STOP_WORDS_EN, "es": _STOP_WORDS_ES}
+
+
+# ── Modelo interno (EN / ES)
+
+class _ModeloIdioma:
+    """Carga y ejecuta el pipeline para un idioma específico."""
+
+    def __init__(self, modelo_path: Path, vectorizador_path: Path) -> None:
+        self._modelo_path = modelo_path
+        self._vectorizador_path = vectorizador_path
+        self.modelo: LogisticRegression | None = None
+        self.vectorizador: TfidfVectorizer | None = None
+        self.categorias: list[str] = []
+        self.cargado: bool = False
+
+    def cargar(self) -> None:
+        if not self._modelo_path.exists():
+            raise FileNotFoundError(
+                f"Modelo no encontrado en {self._modelo_path}"
+            )
+        if not self._vectorizador_path.exists():
+            raise FileNotFoundError(
+                f"Vectorizador no encontrado en {self._vectorizador_path}"
+            )
+        self.modelo = joblib.load(self._modelo_path)
+        self.vectorizador = joblib.load(self._vectorizador_path)
+        self.categorias = list(self.modelo.classes_)
+        self.cargado = True
+
+
+# ── Servicio principal
+
+class ClasificadorService:
+    """Clasifica contenido técnico en EN o ES según el idioma detectado."""
+
+    def __init__(self) -> None:
+        # Modelos por idioma
+        self._en = _ModeloIdioma(
+            modelo_path=Path(settings.model_path_en),
+            vectorizador_path=Path(settings.vectorizer_path_en),
+        )
+        self._es = _ModeloIdioma(
+            modelo_path=Path(settings.model_path_es),
+            vectorizador_path=Path(settings.vectorizer_path_es),
+        )
+
+    # ── Propiedades
+
+    @property
+    def cargado(self) -> bool:
+        return self._en.cargado or self._es.cargado
+
+    @property
+    def categorias(self) -> list[str]:
+        """Categorías del modelo que esté cargado (prioridad EN)."""
+        if self._en.cargado:
+            return self._en.categorias
+        if self._es.cargado:
+            return self._es.categorias
+        return []
+
+    @property
+    def modelos_disponibles(self) -> list[str]:
+        """Idiomas cuyos modelos están cargados."""
+        disponibles = []
+        if self._en.cargado:
+            disponibles.append("en")
+        if self._es.cargado:
+            disponibles.append("es")
+        return disponibles
+
+    # ── Carga
+
+    def cargar(self) -> None:
+        """Intenta cargar AMBOS modelos. Fallar uno no impide el otro."""
+        errores = []
+        try:
+            self._en.cargar()
+            print(f"  [OK] Modelo EN cargado: {len(self._en.categorias)} categorias")
+        except FileNotFoundError as e:
+            errores.append(str(e))
+
+        try:
+            self._es.cargar()
+            print(f"  [OK] Modelo ES cargado: {len(self._es.categorias)} categorias")
+        except FileNotFoundError as e:
+            errores.append(str(e))
+
+        if not self.cargado:
+            for err in errores:
+                print(f"  [WARN] {err}")
+            print("  La API arrancará, pero /contenido devolverá 503 hasta cargar al menos un modelo.")
+        elif errores:
+            for err in errores:
+                print(f"  [WARN] {err}")
+
+    # ── Predicción
+
+    def predecir(self, titulo: str, texto: str, idioma: str = "auto") -> dict:
+        """Clasifica un contenido.
+
+        Parameters
+        ----------
+        titulo, texto : str
+            Contenido a clasificar.
+        idioma : "auto" | "en" | "es"
+            Si es "auto", se detecta automáticamente.
+
+        Returns
+        -------
+        dict con keys: ``categoria``, ``probabilidad``,
+        ``informacion_adicional``, ``idioma``.
+        """
+        if idioma == "auto":
+            idioma = detectar_idioma(f"{titulo} {texto}")
+
+        modelo_idioma = self._obtener_modelo(idioma)
+
+        # Limpiar según idioma
+        limpiar = _LIMPIEZA_POR_IDIOMA[idioma]
+        texto_combinado = f"{limpiar(titulo)} {limpiar(texto)}"
+
+        X = modelo_idioma.vectorizador.transform([texto_combinado])
+
+        categoria = modelo_idioma.modelo.predict(X)[0]
+
+        probs = modelo_idioma.modelo.predict_proba(X)[0]
+        idx = list(modelo_idioma.modelo.classes_).index(categoria)
+        probabilidad = round(float(probs[idx]), 4)
+
+        terminos_con_peso = self._extraer_terminos(modelo_idioma, X, idioma)
+
+        return {
+            "categoria": categoria,
+            "probabilidad": probabilidad,
+            "informacion_adicional": [t["palabra"] for t in terminos_con_peso],
+            "terminos_clave": terminos_con_peso,
+            "idioma": idioma,
+        }
+
+    def predecir_batch(self, items: list[dict]) -> list[dict]:
+        """Clasifica múltiples contenidos."""
+        return [self.predecir(it["titulo"], it["texto"], it.get("idioma", "auto")) for it in items]
+
+    # ── Internos
+
+    def _obtener_modelo(self, idioma: str) -> _ModeloIdioma:
+        modelo = self._en if idioma == "en" else self._es
+        if not modelo.cargado or modelo.modelo is None or modelo.vectorizador is None:
+            raise RuntimeError(
+                f"Modelo para '{idioma}' no cargado. "
+                "Ejecutá el notebook correspondiente primero."
+            )
+        return modelo
+
+    def _extraer_terminos(
+        self, modelo: _ModeloIdioma, X: np.ndarray, idioma: str
+    ) -> list[dict]:
+        """Devuelve hasta 5 términos con su palabra y peso TF-IDF."""
+        feature_names = modelo.vectorizador.get_feature_names_out()
+        indexados = list(enumerate(X.toarray()[0]))
+        indexados.sort(key=lambda x: x[1], reverse=True)
+
+        stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, _STOP_WORDS_EN)
+        terminos = []
+        for i, score in indexados:
+            palabra = feature_names[i]
+            if palabra in stop_words:
+                continue
+            if score > 0:
+                terminos.append({
+                    "palabra": palabra,
+                    "peso": round(float(score), 4),
+                })
+            if len(terminos) >= 5:
+                break
+        return terminos
+
+
+# Instancia singleton
+clasificador = ClasificadorService()
