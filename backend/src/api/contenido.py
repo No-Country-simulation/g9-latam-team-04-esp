@@ -12,21 +12,70 @@ Endpoints de clasificación de contenido técnico.
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-# from ..core.database import guardar_clasificacion, obtener_historial
-# from ..models.request import ContenidoBatchRequest, ContenidoRequest
+from ..core.database import guardar_clasificacion
+from ..models.request import ContenidoRequest
 
-from ..models.response import (HealthResponse)
-# from ..models.response import (
-#     ContenidoBatchResponse,
-#     ContenidoResponse,
-#     HealthResponse,
-#     HistorialItem,
-#     HistorialResponse,
-# )
+from ..models.response import (HealthResponse, ContenidoResponse)
 
 from ..services.clasificador import clasificador
 
 router = APIRouter(prefix="", tags=["contenido"])
+
+# Umbral mínimo de confianza para aceptar una clasificación
+UMBRAL_CONFIANZA: float = 0.25
+
+@router.post(
+    "/contenido",
+    response_model=ContenidoResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Clasificar contenido técnico",
+    description="Recibe un título y texto técnico, y devuelve la categoría "
+    "asignada por el modelo junto con los términos clave extraídos.",
+)
+async def clasificar_contenido(body: ContenidoRequest):
+    """Clasifica un contenido individual y lo guarda en el historial."""
+    _verificar_modelo()
+
+    try:
+        resultado = clasificador.predecir(body.titulo, body.texto, idioma=body.idioma)
+
+        # Extraer terminos_clave ANTES de pasar a ContenidoResponse
+        terminos_clave = resultado.pop("terminos_clave", [])
+
+        # Umbral de confianza
+        if resultado["probabilidad"] < UMBRAL_CONFIANZA:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"El contenido no pudo clasificarse con suficiente confianza "
+                    f"(probabilidad: {resultado['probabilidad']:.4f}, "
+                    f"mínimo requerido: {UMBRAL_CONFIANZA})"
+                ),
+            )
+
+        # Persistir en BD
+        registro_id = guardar_clasificacion(
+            titulo=body.titulo,
+            texto=body.texto,
+            categoria=resultado["categoria"],
+            probabilidad=resultado["probabilidad"],
+            terminos_clave=terminos_clave, # list[dict] con palabra + peso
+            idioma=resultado["idioma"],
+        )
+
+        return ContenidoResponse(**resultado, id=registro_id)
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Datos inválidos: {exc}",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar el contenido: {exc}",
+        )
 
 
 @router.get(
