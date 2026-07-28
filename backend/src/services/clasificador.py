@@ -24,6 +24,15 @@ from ..core.config import settings
 
 # ── Limpieza de texto
 
+def limpiar_texto(texto: str) -> str:
+    """Limpieza de texto: minúsculas y normalización de espacios.
+    """
+    if not texto:
+        return ""
+    texto = str(texto).lower()
+    texto = re.sub(r"\s+", " ", texto)
+    return texto.strip()
+
 def limpiar_texto_en(texto: str) -> str:
     """Limpieza para modelo INGLÉS: elimina acentos y diacríticos."""
     if not texto:
@@ -74,7 +83,7 @@ except ImportError:
 
 # ── Stop words para extracción de términos
 
-_LIMPIEZA_POR_IDIOMA = {"en": limpiar_texto_en, "es": limpiar_texto_es}
+_LIMPIEZA_POR_IDIOMA = {"en": limpiar_texto, "es": limpiar_texto}
 _STOP_WORDS_POR_IDIOMA = {"en": STOP_WORDS_EN, "es": STOP_WORDS_ES}
 
 
@@ -197,6 +206,16 @@ class ClasificadorService:
         # Limpiar según idioma
         limpiar = _LIMPIEZA_POR_IDIOMA[idioma]
         texto_combinado = f"{limpiar(titulo)} {limpiar(texto)}"
+
+        # Validación post-limpieza: debe quedar contenido significativo
+        tokens = texto_combinado.split()
+        stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, STOP_WORDS_EN)
+        tokens_significativos = [t for t in tokens if t not in stop_words]
+        if len(tokens_significativos) < 2:
+            raise ValueError(
+                "El contenido no tiene suficiente información significativa "
+                "para clasificar después de eliminar ruido y palabras vacías"
+            )
 
         X = modelo_idioma.vectorizador.transform([texto_combinado])
 
