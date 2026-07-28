@@ -2,7 +2,8 @@
 Persistencia en Oracle Database.
 
 Schema normalizado: contenidos → clasificaciones → categorias + terminos_clave.
-Driver: python-oracledb (thin mode por defecto, thick mode si hay wallet configurada).
+Driver: python-oracledb (thin mode siempre — soporta wallets mTLS nativamente).
+Thick mode (Oracle Instant Client) habilitable solo si se necesita.
 Funciona con FreeSQL.com, Docker, y OCI Autonomous Database.
 """
 
@@ -16,12 +17,15 @@ from .config import settings
 def get_connection() -> oracledb.Connection:
     """Devuelve una conexión a Oracle Database.
 
-    - Si hay wallet configurada → modo thick (ADB con wallet)
-    - Si no → modo thin (FreeSQL.com, Docker, ADB sin wallet)
+    - Si hay wallet configurada → thin mode con wallet mTLS
+    - Si no → thin mode directo (FreeSQL.com, Docker, ADB sin wallet)
     """
     if settings.oracle_wallet_dir:
-        # Modo thick — ADB con wallet
-        oracledb.init_oracle_client()
+        # Modo thin con wallet mTLS (no requiere Oracle Instant Client).
+        # python-oracledb 2.0+ soporta wallets en thin mode de forma nativa.
+        # TODO: si en el futuro se necesita thick mode (pools heterogéneos,
+        #       NNE, Kerberos, SODA), agregar acá:
+        #   oracledb.init_oracle_client(lib_dir=r"ruta\al\instantclient")
         conn = oracledb.connect(
             user=settings.oracle_user,
             password=settings.oracle_password,

@@ -17,6 +17,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
+from shared.stop_words import STOP_WORDS_EN, STOP_WORDS_ES
+
 from ..core.config import settings
 
 
@@ -72,51 +74,8 @@ except ImportError:
 
 # ── Stop words para extracción de términos
 
-_STOP_WORDS_EN: set[str] = {
-    "a", "about", "above", "after", "again", "against", "all", "am", "an",
-    "and", "any", "are", "as", "at", "be", "because", "been", "before",
-    "being", "below", "between", "both", "but", "by", "could", "did", "do",
-    "does", "doing", "down", "during", "each", "few", "for", "from",
-    "further", "had", "has", "have", "having", "he", "her", "here", "hers",
-    "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is",
-    "it", "its", "itself", "just", "me", "more", "most", "my", "myself",
-    "no", "nor", "not", "now", "of", "on", "once", "only", "or", "other",
-    "our", "ours", "ourselves", "out", "over", "own", "per", "same", "she",
-    "should", "so", "some", "such", "than", "that", "the", "their", "theirs",
-    "them", "themselves", "then", "there", "these", "they", "this", "those",
-    "through", "to", "too", "under", "until", "up", "very", "was", "we",
-    "were", "what", "when", "where", "which", "while", "who", "whom", "why",
-    "will", "with", "would", "you", "your", "yours", "yourself", "yourselves",
-}
-
-_STOP_WORDS_ES: set[str] = {
-    "a", "acerca", "ahi", "al", "alguna", "algunas", "algunos", "algo",
-    "alguien", "alli", "ambas", "ambos", "ante", "aquel", "aquella",
-    "aquellos", "aqui", "arriba", "asi", "aun", "aunque", "bajo", "bien",
-    "cabe", "cada", "casi", "como", "con", "contra", "cual", "cuales",
-    "cualquier", "cualquiera", "cuan", "cuando", "cuanto", "de", "del",
-    "demas", "dentro", "desde", "donde", "dos", "e", "el", "ella", "ellas",
-    "ello", "ellos", "embargo", "en", "entre", "era", "eran", "es", "esa",
-    "esas", "ese", "eso", "esos", "esta", "estaba", "estan", "estar",
-    "este", "esto", "etc", "fin", "forma", "fue", "gracias", "ha", "hace",
-    "hacen", "han", "hasta", "hay", "he", "hoy", "la", "las", "le", "les",
-    "lo", "los", "lugar", "mas", "mediante", "mejor", "menos", "mi", "mis",
-    "modo", "mucha", "muchas", "mucho", "muchos", "muy", "nada", "nadie",
-    "ni", "ningun", "ninguna", "ningunas", "ningunos", "no", "nos",
-    "nosotras", "nosotros", "nuestra", "nuestro", "nuevo", "nunca", "o",
-    "os", "otra", "otras", "otro", "otros", "para", "parte", "pero", "poco",
-    "podria", "por", "porque", "primero", "propio", "puede", "pueden",
-    "que", "quien", "quienes", "se", "segun", "ser", "si", "sido",
-    "siempre", "sin", "sobre", "solo", "son", "su", "sus", "tal", "tan",
-    "tambien", "tampoco", "tan", "tanto", "te", "tenemos", "tener",
-    "tiempo", "tiene", "tienen", "tipo", "toda", "todas", "todo", "todos",
-    "tras", "tu", "tus", "u", "un", "una", "unas", "uno", "unos", "usa",
-    "usan", "usar", "usted", "ustedes", "va", "vamos", "van", "varias",
-    "varios", "via", "vos", "vosotras", "vosotros", "voy", "y", "ya", "yo",
-}
-
 _LIMPIEZA_POR_IDIOMA = {"en": limpiar_texto_en, "es": limpiar_texto_es}
-_STOP_WORDS_POR_IDIOMA = {"en": _STOP_WORDS_EN, "es": _STOP_WORDS_ES}
+_STOP_WORDS_POR_IDIOMA = {"en": STOP_WORDS_EN, "es": STOP_WORDS_ES}
 
 
 # ── Modelo interno (EN / ES)
@@ -280,7 +239,7 @@ class ClasificadorService:
         indexados = list(enumerate(X.toarray()[0]))
         indexados.sort(key=lambda x: x[1], reverse=True)
 
-        stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, _STOP_WORDS_EN)
+        stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, STOP_WORDS_EN)
         terminos = []
         for i, score in indexados:
             palabra = feature_names[i]
