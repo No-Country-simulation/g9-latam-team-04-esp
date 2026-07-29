@@ -69,3 +69,13 @@ class ContenidoRequest(BaseModel):
     @classmethod
     def validar_demasiado_ruido(cls, v: str) -> str:
         return rechazar_demasiado_ruido(v)
+
+class ContenidoBatchRequest(BaseModel):
+    """Cuerpo para clasificación por lote."""
+
+    items: list[ContenidoRequest] = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Lista de contenidos a clasificar",
+    )

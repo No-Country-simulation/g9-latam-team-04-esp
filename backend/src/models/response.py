@@ -3,6 +3,7 @@ Esquemas Pydantic para las respuestas de la API.
 """
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -36,6 +37,28 @@ class ContenidoResponse(BaseModel):
         None,
         description="ID en el historial (si se persistió)",
     )
+
+class ItemResultadoBatch(BaseModel):
+    """Resultado individual dentro de una solicitud por lote."""
+
+    posicion: int = Field(..., description="Índice original del contenido en la solicitud")
+    exito: bool = Field(..., description="Indica si el ítem superó el umbral y fue persistido")
+    data: ContenidoResponse | None = Field(
+        None, description="Datos de la clasificación si fue exitosa"
+    )
+    error: str | None = Field(
+        None, description="Mensaje de error si la clasificación falló o no superó el umbral"
+    )
+
+
+class ContenidoBatchResponse(BaseModel):
+    """Resultado global de clasificación por lote."""
+
+    resultados: list[ItemResultadoBatch]
+    total_procesados: int
+    total_exitosos: int
+    total_fallidos: int
+
 
 class HealthResponse(BaseModel):
     """Respuesta del endpoint de salud."""
