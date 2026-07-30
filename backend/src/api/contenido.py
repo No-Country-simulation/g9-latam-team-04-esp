@@ -5,6 +5,7 @@ Endpoints de clasificación de contenido técnico.
 ``POST /contenido/lote-json``  - Clasifica hasta 100 contenidos desde JSON
 ``POST /contenido/lote-csv``   - Clasifica hasta 100 contenidos desde CSV
 ``GET  /contenido/{id}``       - Obtiene detalle completo de un contenido
+``PUT  /contenido/{id}``       - Actualiza un contenido y lo re-clasifica
 ``DELETE /contenido/{id}``     - Elimina un contenido y sus registros asociados
 ``GET  /contenidos``           - Lista / busca contenidos con filtros (q, categoria, paginado)
 ``GET  /categorias``           - Lista las categorías disponibles
@@ -16,6 +17,7 @@ import io
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from ..core.database import (
+    actualizar_contenido,
     eliminar_contenido,
     guardar_clasificacion,
     listar_categorias,
@@ -313,6 +315,64 @@ async def eliminar_contenido_endpoint(id: int):
             detail=f"No se encontró contenido con id {id}",
         )
     return {"mensaje": f"Contenido {id} eliminado correctamente"}
+
+@router.put(
+    "/contenido/{id}",
+    response_model=ContenidoDetalleResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar contenido",
+    description="Actualiza título y texto de un contenido existente. "
+    "Re-clasifica automáticamente con el modelo y reemplaza "
+    "la categoría, probabilidad y términos clave.",
+)
+async def actualizar_contenido_endpoint(id: int, body: ContenidoRequest):
+    """Actualiza un contenido y lo re-clasifica."""
+    _verificar_modelo()
+
+    try:
+        resultado = clasificador.predecir(body.titulo, body.texto, idioma=body.idioma)
+        terminos_clave = resultado.pop("terminos_clave", [])
+
+        if resultado["probabilidad"] < UMBRAL_CONFIANZA:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"El contenido no pudo clasificarse con suficiente confianza "
+                    f"(probabilidad: {resultado['probabilidad']:.4f}, "
+                    f"mínimo requerido: {UMBRAL_CONFIANZA})"
+                ),
+            )
+
+        item = actualizar_contenido(
+            contenido_id=id,
+            titulo=body.titulo,
+            texto=body.texto,
+            idioma=resultado["idioma"],
+            categoria=resultado["categoria"],
+            probabilidad=resultado["probabilidad"],
+            terminos_clave=terminos_clave,
+        )
+
+        if item is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No se encontró contenido con id {id}",
+            )
+
+        return ContenidoDetalleResponse(**item)
+
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Datos inválidos: {exc}",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al actualizar el contenido: {exc}",
+        )
 
 @router.get(
     "/categorias",

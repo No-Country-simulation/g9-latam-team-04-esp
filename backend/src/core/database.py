@@ -505,3 +505,88 @@ def eliminar_contenido(contenido_id: int) -> bool:
             cursor.execute("DELETE FROM contenidos WHERE id = :cid", {"cid": contenido_id})
             conn.commit()
             return True
+
+
+def actualizar_contenido(
+    contenido_id: int,
+    titulo: str,
+    texto: str,
+    idioma: str,
+    categoria: str,
+    probabilidad: float,
+    terminos_clave: list[dict],
+) -> dict | None:
+    """
+    Actualiza un contenido existente y su clasificación.
+
+    1. UPDATE ``contenidos`` (titulo, texto, idioma)
+    2. DELETE ``terminos_clave`` + ``clasificaciones`` viejos
+    3. INSERT nueva ``clasificacion`` y nuevos ``terminos_clave``
+
+    Returns el dict completo del contenido actualizado, o ``None`` si no existe.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            # Verificar que exista
+            cursor.execute("SELECT id FROM contenidos WHERE id = :cid", {"cid": contenido_id})
+            if not cursor.fetchone():
+                return None
+
+            # 1. Actualizar contenido
+            cursor.execute("""
+                UPDATE contenidos
+                SET titulo = :titulo, texto = :texto, idioma = :idioma
+                WHERE id = :cid
+            """, {"titulo": titulo, "texto": texto, "idioma": idioma, "cid": contenido_id})
+
+            # 2. Eliminar datos de clasificación anteriores
+            cursor.execute(
+                "DELETE FROM terminos_clave WHERE contenido_id = :cid",
+                {"cid": contenido_id},
+            )
+            cursor.execute(
+                "DELETE FROM clasificaciones WHERE contenido_id = :cid",
+                {"cid": contenido_id},
+            )
+
+            # 3. Categoría — obtener o crear
+            cursor.execute(
+                "SELECT id FROM categorias WHERE nombre = :nombre",
+                {"nombre": categoria},
+            )
+            row = cursor.fetchone()
+            if row:
+                categoria_id = row[0]
+            else:
+                id_out = cursor.var(int)
+                cursor.execute(
+                    "INSERT INTO categorias (nombre) VALUES (:nombre) RETURNING id INTO :id_out",
+                    {"nombre": categoria, "id_out": id_out},
+                )
+                categoria_id = id_out.getvalue()[0]
+
+            # 4. Nueva clasificación
+            cursor.execute(
+                """
+                INSERT INTO clasificaciones (contenido_id, categoria_id, probabilidad)
+                VALUES (:cid, :cat_id, :prob)
+                """,
+                {"cid": contenido_id, "cat_id": categoria_id, "prob": probabilidad},
+            )
+
+            # 5. Nuevos términos clave
+            if terminos_clave:
+                cursor.executemany(
+                    """
+                    INSERT INTO terminos_clave (contenido_id, palabra, peso_tfidf)
+                    VALUES (:cid, :palabra, :peso)
+                    """,
+                    [
+                        {"cid": contenido_id, "palabra": t["palabra"], "peso": t["peso"]}
+                        for t in terminos_clave
+                    ],
+                )
+
+            conn.commit()
+
+    return obtener_contenido_por_id(contenido_id)
