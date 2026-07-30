@@ -4,7 +4,7 @@ Endpoints de clasificación de contenido técnico.
 ``POST /contenido``            - Clasifica un contenido individual
 ``POST /contenido/lote-json``  - Clasifica hasta 100 contenidos desde JSON
 ``POST /contenido/lote-csv``   - Clasifica hasta 100 contenidos desde CSV
-``GET  /contenido/historial``  - Historial paginado de clasificaciones
+``GET  /contenidos``           - Lista / busca contenidos con filtros (q, categoria, paginado)
 ``GET  /categorias``           - Lista las categorías disponibles
 ``POST /busqueda``             - Busca contenidos por palabra clave
 ``POST /recomendar``           - Recomenda contenidos relacionados
@@ -13,14 +13,16 @@ Endpoints de clasificación de contenido técnico.
 import csv
 import io
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
-from ..core.database import guardar_clasificacion
+from ..core.database import guardar_clasificacion, listar_contenidos
 from ..models.request import ContenidoBatchRequest, ContenidoRequest
 from ..models.response import (
     ContenidoBatchResponse,
     ContenidoResponse,
     HealthResponse,
+    HistorialItem,
+    HistorialResponse,
     ItemResultadoBatch,
 )
 from ..services.clasificador import clasificador
@@ -243,6 +245,33 @@ async def clasificar_lote_csv(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al procesar el CSV: {exc}",
         )
+
+@router.get(
+    "/contenidos",
+    response_model=HistorialResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Listar / buscar contenidos",
+    description="Endpoint unificado para listar y buscar contenidos clasificados. "
+    "Si no se pasa ``q``, devuelve el historial paginado. "
+    "Si se pasa ``q``, busca en título, texto y términos clave. "
+    "Se puede combinar con ``categoria`` para filtrar.",
+)
+async def listar_contenidos_endpoint(
+    q: str | None = Query(None, description="Término de búsqueda (busca en título, texto y términos clave)"),
+    categoria: str | None = Query(None, description="Filtrar por categoría"),
+    pagina: int = Query(1, ge=1, description="Número de página"),
+    limite: int = Query(20, ge=1, le=100, description="Resultados por página"),
+):
+    """Lista o busca contenidos con filtros opcionales."""
+    items, total = listar_contenidos(
+        q=q, categoria=categoria, pagina=pagina, limite=limite,
+    )
+    return HistorialResponse(
+        items=[HistorialItem(**it) for it in items],
+        total=total,
+        pagina=pagina,
+        total_paginas=max(1, -(-total // limite)),  # ceil division
+    )
 
 @router.get(
     "/health",

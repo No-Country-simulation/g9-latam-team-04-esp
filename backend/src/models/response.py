@@ -50,7 +50,6 @@ class ItemResultadoBatch(BaseModel):
         None, description="Mensaje de error si la clasificación falló o no superó el umbral"
     )
 
-
 class ContenidoBatchResponse(BaseModel):
     """Resultado global de clasificación por lote."""
 
@@ -59,6 +58,25 @@ class ContenidoBatchResponse(BaseModel):
     total_exitosos: int
     total_fallidos: int
 
+class HistorialItem(BaseModel):
+    """Una entrada del historial de clasificaciones."""
+
+    id: int
+    titulo: str
+    texto: str
+    categoria: str
+    probabilidad: float
+    informacion_adicional: list[str]
+    idioma: str = "en"
+    creado_en: str
+
+class HistorialResponse(BaseModel):
+    """Página del historial de clasificaciones."""
+
+    items: list[HistorialItem]
+    total: int
+    pagina: int
+    total_paginas: int
 
 class HealthResponse(BaseModel):
     """Respuesta del endpoint de salud."""

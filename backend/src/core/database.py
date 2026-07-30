@@ -7,12 +7,13 @@ Thick mode (Oracle Instant Client) habilitable solo si se necesita.
 Funciona con FreeSQL.com, Docker, y OCI Autonomous Database.
 """
 
-import json
+from collections import defaultdict
 from typing import Any
 
 import oracledb
 
 from .config import settings
+
 
 def get_connection() -> oracledb.Connection:
     """Devuelve una conexión a Oracle Database.
@@ -175,72 +176,126 @@ def guardar_clasificacion(
         conn.commit()
         return clasificacion_id
 
-def obtener_historial(
+def listar_contenidos(
     limite: int = 20,
     pagina: int = 1,
     categoria: str | None = None,
-) -> tuple[list[dict], int]:
+    q: str | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     """
-    Devuelve una página del historial con joins a las tablas normalizadas.
+    Busca y lista contenidos con filtros opcionales por palabra clave y categoría.
+
+    Si no se pasa ``q``, actúa como el historial completo (solo paginado + filtro
+    por categoría). Si se pasa ``q``, busca coincidencias en título, texto
+    y términos clave (LIKE case-insensitive).
+
+    Parameters
+    ----------
+    q : str | None
+        Término de búsqueda (busca en título, texto y términos clave).
+    categoria : str | None
+        Filtro por nombre de categoría.
+    limite : int
+        Resultados por página (máx 100).
+    pagina : int
+        Número de página (desde 1).
+
+    Returns
+    -------
+    tuple[list[dict], int]
+        (items, total)
     """
     offset = (pagina - 1) * limite
-
-    where_clause = ""
     params: dict[str, Any] = {}
+    conditions: list[str] = []
+
+    # ── Condiciones dinámicas
+    if q:
+        q_clean = q.strip().lower()
+        params["q"] = q_clean
+        conditions.append(
+            "(LOWER(c.titulo) LIKE '%' || :q || '%' OR "
+            "LOWER(c.texto) LIKE '%' || :q || '%' OR "
+            "EXISTS (SELECT 1 FROM terminos_clave tk "
+            "         WHERE tk.contenido_id = c.id "
+            "           AND LOWER(tk.palabra) LIKE '%' || :q || '%'))"
+        )
 
     if categoria:
-        where_clause = "WHERE cat.nombre = :categoria"
-        params["categoria"] = categoria
+        params["categoria"] = categoria.strip().lower()
+        conditions.append("LOWER(cat.nombre) = :categoria")
+
+    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
     with get_connection() as conn:
         with conn.cursor() as cursor:
-            # Total
-            cursor.execute(
-                f"""
+            # ── Total
+            cursor.execute(f"""
                 SELECT COUNT(*) AS total
-                FROM clasificaciones cl
+                FROM contenidos c
+                JOIN clasificaciones cl ON cl.contenido_id = c.id
                 JOIN categorias cat ON cl.categoria_id = cat.id
                 {where_clause}
-                """,
-                params,
-            )
+            """, params)
             total = cursor.fetchone()[0]
 
-            # Página — sintaxis OFFSET / FETCH (Oracle 12c+)
-            cursor.execute(
-                f"""
+            if total == 0:
+                return [], 0
+
+            # ── Página
+            cursor.execute(f"""
                 SELECT
-                    c.id            AS contenido_id,
-                    c.titulo,
-                    c.texto,
-                    c.idioma,
-                    cl.id           AS clasificacion_id,
-                    cl.probabilidad,
-                    cl.creado_en,
-                    cat.nombre      AS categoria
-                FROM clasificaciones cl
-                JOIN contenidos c   ON cl.contenido_id = c.id
+                    c.id AS contenido_id, c.titulo, c.texto, c.idioma,
+                    cl.id AS clasificacion_id, cl.probabilidad, cl.creado_en,
+                    cat.nombre AS categoria
+                FROM contenidos c
+                JOIN clasificaciones cl ON cl.contenido_id = c.id
                 JOIN categorias cat ON cl.categoria_id = cat.id
                 {where_clause}
                 ORDER BY cl.creado_en DESC
                 OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY
-                """,
-                {**params, "offset": offset, "limit": limite},
-            )
+            """, {**params, "offset": offset, "limit": limite})
+
             rows = cursor.fetchall()
 
-    items = []
-    for row in rows:
-        items.append({
-            "contenido_id": row[0],
-            "clasificacion_id": row[4],
-            "titulo": row[1],
-            "texto": row[2][:200],
-            "categoria": row[7],
-            "probabilidad": row[5],
-            "idioma": row[3],
-            "creado_en": _fmt_dt(row[6]),
-        })
+            items: list[dict[str, Any]] = []
+            contenido_ids: list[int] = []
+
+            for row in rows:
+                contenido_id = row[0]
+                contenido_ids.append(contenido_id)
+
+                # Leer CLOB o string (truncado a 200 caracteres)
+                texto_raw = row[2]
+                texto = texto_raw.read()[:200] if hasattr(texto_raw, "read") else str(texto_raw)[:200]
+
+                items.append({
+                    "id": contenido_id,
+                    "titulo": row[1],
+                    "texto": texto,
+                    "categoria": row[7],
+                    "probabilidad": row[5],
+                    "idioma": row[3],
+                    "creado_en": _fmt_dt(row[6]),
+                    "informacion_adicional": [],
+                })
+
+            # ── Batch fetch de términos clave
+            if contenido_ids:
+                placeholders = ", ".join(f":id{i}" for i in range(len(contenido_ids)))
+                cursor.execute(f"""
+                    SELECT contenido_id, palabra
+                    FROM terminos_clave
+                    WHERE contenido_id IN ({placeholders})
+                    ORDER BY contenido_id, peso_tfidf DESC
+                """, {f"id{i}": cid for i, cid in enumerate(contenido_ids)})
+
+                term_map = defaultdict(list)
+                for cid, palabra in cursor.fetchall():
+                    term_map[cid].append(palabra)
+
+                for item in items:
+                    item["informacion_adicional"] = term_map.get(item["id"], [])
 
     return items, total
 
