@@ -4,10 +4,9 @@ Endpoints de clasificación de contenido técnico.
 ``POST /contenido``            - Clasifica un contenido individual
 ``POST /contenido/lote-json``  - Clasifica hasta 100 contenidos desde JSON
 ``POST /contenido/lote-csv``   - Clasifica hasta 100 contenidos desde CSV
+``GET  /contenido/{id}``       - Obtiene detalle completo de un contenido
 ``GET  /contenidos``           - Lista / busca contenidos con filtros (q, categoria, paginado)
 ``GET  /categorias``           - Lista las categorías disponibles
-``POST /busqueda``             - Busca contenidos por palabra clave
-``POST /recomendar``           - Recomenda contenidos relacionados
 ``GET  /health``               - Health check del servicio
 """
 import csv
@@ -15,11 +14,17 @@ import io
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
-from ..core.database import guardar_clasificacion, listar_categorias, listar_contenidos
+from ..core.database import (
+    guardar_clasificacion,
+    listar_categorias,
+    listar_contenidos,
+    obtener_contenido_por_id,
+)
 from ..models.request import ContenidoBatchRequest, ContenidoRequest
 from ..models.response import (
     CategoriasResponse,
     ContenidoBatchResponse,
+    ContenidoDetalleResponse,
     ContenidoResponse,
     HealthResponse,
     HistorialItem,
@@ -273,6 +278,23 @@ async def listar_contenidos_endpoint(
         pagina=pagina,
         total_paginas=max(1, -(-total // limite)),  # ceil division
     )
+
+@router.get(
+    "/contenido/{id}",
+    response_model=ContenidoDetalleResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtener contenido por ID",
+    description="Devuelve el detalle completo de un contenido clasificado, incluyendo el texto completo y los términos clave.",
+)
+async def obtener_contenido(id: int):
+    """Obtiene un contenido por su ID."""
+    item = obtener_contenido_por_id(id)
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No se encontró contenido con id {id}",
+        )
+    return ContenidoDetalleResponse(**item)
 
 @router.get(
     "/categorias",

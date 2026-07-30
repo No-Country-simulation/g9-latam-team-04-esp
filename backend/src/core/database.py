@@ -430,3 +430,58 @@ def listar_categorias() -> list[str]:
         with conn.cursor() as cursor:
             cursor.execute("SELECT nombre FROM categorias ORDER BY nombre")
             return [row[0] for row in cursor.fetchall()]
+
+
+def obtener_contenido_por_id(contenido_id: int) -> dict | None:
+    """
+    Devuelve el detalle completo de un contenido por su ID.
+
+    Incluye texto completo (sin truncar), categoría, términos clave, etc.
+    Returns ``None`` si no existe.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT
+                    c.id            AS contenido_id,
+                    c.titulo,
+                    c.texto,
+                    c.idioma,
+                    cl.id           AS clasificacion_id,
+                    cl.probabilidad,
+                    cl.creado_en,
+                    cat.nombre      AS categoria
+                FROM contenidos c
+                JOIN clasificaciones cl ON cl.contenido_id = c.id
+                JOIN categorias cat    ON cl.categoria_id = cat.id
+                WHERE c.id = :cid
+            """, {"cid": contenido_id})
+            row = cursor.fetchone()
+            if not row:
+                return None
+
+            # Leer CLOB
+            texto_raw = row[2]
+            texto = texto_raw.read() if hasattr(texto_raw, "read") else str(texto_raw)
+
+            item = {
+                "id": row[0],
+                "titulo": row[1],
+                "texto": texto,
+                "categoria": row[7],
+                "probabilidad": row[5],
+                "idioma": row[3],
+                "creado_en": _fmt_dt(row[6]),
+                "informacion_adicional": [],
+            }
+
+            # Términos clave
+            cursor.execute("""
+                SELECT palabra
+                FROM terminos_clave
+                WHERE contenido_id = :cid
+                ORDER BY peso_tfidf DESC
+            """, {"cid": contenido_id})
+            item["informacion_adicional"] = [r[0] for r in cursor.fetchall()]
+
+            return item

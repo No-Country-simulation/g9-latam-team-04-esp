@@ -78,6 +78,22 @@ class HistorialResponse(BaseModel):
     pagina: int
     total_paginas: int
 
+class ContenidoDetalleResponse(BaseModel):
+    """Detalle completo de un contenido clasificado."""
+
+    id: int = Field(..., description="ID del contenido")
+    titulo: str = Field(..., description="Título del contenido")
+    texto: str = Field(..., description="Texto completo del contenido")
+    categoria: str = Field(..., description="Categoría asignada por el modelo")
+    probabilidad: float = Field(
+        ..., ge=0.0, le=1.0, description="Nivel de confianza de la clasificación"
+    )
+    informacion_adicional: list[str] = Field(
+        ..., description="Términos clave extraídos del contenido"
+    )
+    idioma: str = Field(..., description="Idioma detectado o forzado")
+    creado_en: str = Field(..., description="Fecha de clasificación")
+
 class CategoriasResponse(BaseModel):
     """Lista de categorías disponibles."""
 
