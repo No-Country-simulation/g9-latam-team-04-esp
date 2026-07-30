@@ -5,6 +5,7 @@ Endpoints de clasificación de contenido técnico.
 ``POST /contenido/lote-json``  - Clasifica hasta 100 contenidos desde JSON
 ``POST /contenido/lote-csv``   - Clasifica hasta 100 contenidos desde CSV
 ``GET  /contenido/{id}``       - Obtiene detalle completo de un contenido
+``DELETE /contenido/{id}``     - Elimina un contenido y sus registros asociados
 ``GET  /contenidos``           - Lista / busca contenidos con filtros (q, categoria, paginado)
 ``GET  /categorias``           - Lista las categorías disponibles
 ``GET  /health``               - Health check del servicio
@@ -15,6 +16,7 @@ import io
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from ..core.database import (
+    eliminar_contenido,
     guardar_clasificacion,
     listar_categorias,
     listar_contenidos,
@@ -295,6 +297,22 @@ async def obtener_contenido(id: int):
             detail=f"No se encontró contenido con id {id}",
         )
     return ContenidoDetalleResponse(**item)
+
+@router.delete(
+    "/contenido/{id}",
+    status_code=status.HTTP_200_OK,
+    summary="Eliminar contenido",
+    description="Elimina un contenido y todos sus registros asociados (clasificación y términos clave).",
+)
+async def eliminar_contenido_endpoint(id: int):
+    """Elimina un contenido por su ID."""
+    eliminado = eliminar_contenido(id)
+    if not eliminado:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No se encontró contenido con id {id}",
+        )
+    return {"mensaje": f"Contenido {id} eliminado correctamente"}
 
 @router.get(
     "/categorias",

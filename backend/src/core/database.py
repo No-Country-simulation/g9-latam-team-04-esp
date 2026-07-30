@@ -70,7 +70,7 @@ def init_db() -> None:
                     categoria_id    NUMBER(10) NOT NULL,
                     probabilidad    NUMBER(5,4) NOT NULL,
                     creado_en       TIMESTAMP  DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    FOREIGN KEY (contenido_id) REFERENCES contenidos(id),
+                    FOREIGN KEY (contenido_id) REFERENCES contenidos(id) ON DELETE CASCADE,
                     FOREIGN KEY (categoria_id) REFERENCES categorias(id)
                 )
             """)
@@ -485,3 +485,23 @@ def obtener_contenido_por_id(contenido_id: int) -> dict | None:
             item["informacion_adicional"] = [r[0] for r in cursor.fetchall()]
 
             return item
+
+
+def eliminar_contenido(contenido_id: int) -> bool:
+    """
+    Elimina un contenido y sus registros relacionados.
+
+    Con ``ON DELETE CASCADE`` en ``clasificaciones`` y ``terminos_clave``,
+    un solo ``DELETE FROM contenidos`` alcanza: Oracle se encarga del resto.
+
+    Returns ``True`` si existía, ``False`` si no.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM contenidos WHERE id = :cid", {"cid": contenido_id})
+            if not cursor.fetchone():
+                return False
+
+            cursor.execute("DELETE FROM contenidos WHERE id = :cid", {"cid": contenido_id})
+            conn.commit()
+            return True
