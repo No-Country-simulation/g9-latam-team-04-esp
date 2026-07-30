@@ -15,9 +15,10 @@ import io
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
-from ..core.database import guardar_clasificacion, listar_contenidos
+from ..core.database import guardar_clasificacion, listar_categorias, listar_contenidos
 from ..models.request import ContenidoBatchRequest, ContenidoRequest
 from ..models.response import (
+    CategoriasResponse,
     ContenidoBatchResponse,
     ContenidoResponse,
     HealthResponse,
@@ -272,6 +273,17 @@ async def listar_contenidos_endpoint(
         pagina=pagina,
         total_paginas=max(1, -(-total // limite)),  # ceil division
     )
+
+@router.get(
+    "/categorias",
+    response_model=CategoriasResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Listar categorías",
+    description="Devuelve todas las categorías registradas en el sistema, ordenadas alfabéticamente.",
+)
+async def listar_categorias_endpoint():
+    """Lista las categorías disponibles."""
+    return CategoriasResponse(categorias=listar_categorias())
 
 @router.get(
     "/health",

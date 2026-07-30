@@ -78,6 +78,15 @@ class HistorialResponse(BaseModel):
     pagina: int
     total_paginas: int
 
+class CategoriasResponse(BaseModel):
+    """Lista de categorías disponibles."""
+
+    categorias: list[str] = Field(
+        ...,
+        examples=[["Backend", "DevOps", "Frontend", "Mobile", "Data Science"]],
+        description="Categorías registradas en el sistema",
+    )
+
 class HealthResponse(BaseModel):
     """Respuesta del endpoint de salud."""
 
