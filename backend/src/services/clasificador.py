@@ -87,6 +87,21 @@ _LIMPIEZA_POR_IDIOMA = {"en": limpiar_texto, "es": limpiar_texto}
 _STOP_WORDS_POR_IDIOMA = {"en": STOP_WORDS_EN, "es": STOP_WORDS_ES}
 
 
+def _es_termino_redundante(palabra: str, elegidas: list[str]) -> bool:
+    """True si 'palabra' es subconjunto de tokens de alguna ya elegida (o viceversa).
+
+    El vectorizador genera unigramas y bigramas a la vez, así que "ci cd" y "cd"
+    (o "machine learning" y "machine") terminan con peso propio. Este filtro deja
+    solo el de mayor peso y evita términos repetidos en informacion_adicional.
+    """
+    tokens_nuevo = set(palabra.split())
+    for seleccionada in elegidas:
+        tokens_sel = set(seleccionada.split())
+        if tokens_nuevo <= tokens_sel or tokens_sel <= tokens_nuevo:
+            return True
+    return False
+
+
 # ── Modelo interno (EN / ES)
 
 class _ModeloIdioma:
@@ -253,22 +268,29 @@ class ClasificadorService:
     def _extraer_terminos(
         self, modelo: _ModeloIdioma, X: np.ndarray, idioma: str
     ) -> list[dict]:
-        """Devuelve hasta 5 términos con su palabra y peso TF-IDF."""
+        """Devuelve hasta 5 términos NO redundantes con su palabra y peso TF-IDF."""
         feature_names = modelo.vectorizador.get_feature_names_out()
         indexados = list(enumerate(X.toarray()[0]))
         indexados.sort(key=lambda x: x[1], reverse=True)
 
         stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, STOP_WORDS_EN)
-        terminos = []
+        terminos: list[dict] = []
+        palabras_elegidas: list[str] = []
+
         for i, score in indexados:
             palabra = feature_names[i]
             if palabra in stop_words:
                 continue
-            if score > 0:
-                terminos.append({
-                    "palabra": palabra,
-                    "peso": round(float(score), 4),
-                })
+            if score <= 0:
+                continue
+            # Saltar términos que repiten tokens de uno ya elegido
+            if _es_termino_redundante(palabra, palabras_elegidas):
+                continue
+            terminos.append({
+                "palabra": palabra,
+                "peso": round(float(score), 4),
+            })
+            palabras_elegidas.append(palabra)
             if len(terminos) >= 5:
                 break
         return terminos
