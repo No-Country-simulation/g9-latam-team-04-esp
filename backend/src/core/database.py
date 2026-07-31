@@ -111,7 +111,9 @@ def guardar_clasificacion(
 
     Returns
     -------
-    int : ID de la clasificación creada.
+    int : ID del CONTENIDO creado (``contenidos.id``). Es el ID que expone
+    la API en GET /contenidos y GET /contenido/{id}, por eso se devuelve
+    este y no el de ``clasificaciones.id`` (secuencias independientes).
     """
     with get_connection() as conn:
         with conn.cursor() as cursor:
@@ -144,21 +146,17 @@ def guardar_clasificacion(
             contenido_id = contenido_id_out.getvalue()[0]
 
             # 3. Clasificación
-            clasificacion_id_out = cursor.var(int)
             cursor.execute(
                 """
                 INSERT INTO clasificaciones (contenido_id, categoria_id, probabilidad)
                 VALUES (:contenido_id, :categoria_id, :probabilidad)
-                RETURNING id INTO :id_out
                 """,
                 {
                     "contenido_id": contenido_id,
                     "categoria_id": categoria_id,
                     "probabilidad": probabilidad,
-                    "id_out": clasificacion_id_out,
                 },
             )
-            clasificacion_id = clasificacion_id_out.getvalue()[0]
 
             # 4. Términos clave
             if terminos_clave:
@@ -174,7 +172,7 @@ def guardar_clasificacion(
                 )
 
         conn.commit()
-        return clasificacion_id
+        return contenido_id
 
 def listar_contenidos(
     limite: int = 20,
