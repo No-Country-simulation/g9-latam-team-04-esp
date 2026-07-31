@@ -9,6 +9,7 @@ Endpoints de clasificación de contenido técnico.
 ``DELETE /contenido/{id}``     - Elimina un contenido y sus registros asociados
 ``GET  /contenidos``           - Lista / busca contenidos con filtros (q, categoria, paginado)
 ``GET  /categorias``           - Lista las categorías disponibles
+``PATCH /contenidos/{id}/clasificacion`` - Corrige/confirma la categoría de un contenido
 ``GET  /health``               - Health check del servicio
 """
 import csv
@@ -18,18 +19,24 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from ..core.database import (
     actualizar_contenido,
+    corregir_clasificacion,
     eliminar_contenido,
     guardar_clasificacion,
     listar_categorias,
     listar_contenidos,
     obtener_contenido_por_id,
 )
-from ..models.request import ContenidoBatchRequest, ContenidoRequest
+from ..models.request import (
+    ContenidoBatchRequest,
+    ContenidoRequest,
+    CorreccionClasificacionRequest,
+)
 from ..models.response import (
     CategoriasResponse,
     ContenidoBatchResponse,
     ContenidoDetalleResponse,
     ContenidoResponse,
+    CorreccionClasificacionResponse,
     HealthResponse,
     HistorialItem,
     HistorialResponse,
@@ -384,6 +391,45 @@ async def actualizar_contenido_endpoint(id: int, body: ContenidoRequest):
 async def listar_categorias_endpoint():
     """Lista las categorías disponibles."""
     return CategoriasResponse(categorias=listar_categorias())
+
+@router.patch(
+    "/contenidos/{id}/clasificacion",
+    response_model=CorreccionClasificacionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Corregir o confirmar clasificación",
+    description="Permite a un humano corregir la categoría de un contenido "
+    "(o confirmar la actual). Registra el par original→corregida en "
+    "feedback_clasificacion como dataset para mejorar el modelo.",
+)
+async def corregir_clasificacion_endpoint(
+    id: int, body: CorreccionClasificacionRequest
+):
+    """Corrige o confirma manualmente la clasificación de un contenido."""
+    try:
+        resultado = corregir_clasificacion(
+            contenido_id=id,
+            nueva_categoria_id=body.nueva_categoria_id,
+            usuario=body.usuario,
+            motivo=body.motivo,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Datos inválidos: {exc}",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al corregir la clasificación: {exc}",
+        )
+
+    if resultado is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No se encontró contenido con id {id}",
+        )
+
+    return CorreccionClasificacionResponse(**resultado)
 
 @router.get(
     "/health",

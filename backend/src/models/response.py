@@ -94,12 +94,38 @@ class ContenidoDetalleResponse(BaseModel):
     idioma: str = Field(..., description="Idioma detectado o forzado")
     creado_en: str = Field(..., description="Fecha de clasificación")
 
+class CorreccionClasificacionResponse(BaseModel):
+    """Respuesta de PATCH /contenidos/{id}/clasificacion."""
+
+    contenido_id: int = Field(..., description="ID del contenido corregido")
+    categoria_anterior: str = Field(
+        ..., description="Categoría que tenía el contenido antes del feedback"
+    )
+    categoria_nueva: str = Field(
+        ..., description="Categoría asignada o confirmada por el humano"
+    )
+    corregida: bool = Field(
+        ...,
+        description="True si cambió de categoría; False si solo confirmó la actual",
+    )
+    usuario: str | None = Field(
+        None, description="Quién realizó la corrección (opcional)"
+    )
+    motivo: str | None = Field(None, description="Motivo de la corrección (opcional)")
+    creado_en: str = Field(..., description="Fecha en que se registró el feedback")
+
+class CategoriaItem(BaseModel):
+    """Una categoría disponible en el sistema."""
+
+    id: int = Field(..., description="ID de la categoría")
+    nombre: str = Field(..., description="Nombre de la categoría")
+
 class CategoriasResponse(BaseModel):
     """Lista de categorías disponibles."""
 
-    categorias: list[str] = Field(
+    categorias: list[CategoriaItem] = Field(
         ...,
-        examples=[["Backend", "DevOps", "Frontend", "Mobile", "Data Science"]],
+        examples=[[{"id": 1, "nombre": "Backend"}]],
         description="Categorías registradas en el sistema",
     )
 
