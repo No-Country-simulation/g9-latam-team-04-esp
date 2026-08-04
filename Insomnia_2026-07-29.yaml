@@ -1,0 +1,288 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: g9-latam-team-04-esp
+meta:
+  id: wrk_cafc59fb7bb24ae892223499684f0fcf
+  created: 1784324973007
+  modified: 1785448595828
+  description: ""
+collection:
+  - url: http://localhost:8000/contenido
+    name: Clasificar Contenido
+    meta:
+      id: req_f1f75f45f98641f995b6818c2345214b
+      created: 1784324979634
+      modified: 1785470171260
+      isPrivate: false
+      description: ""
+      sortKey: -1784324979634
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"titulo": "Consultas SQL avanzadas para MySQL",
+        	"texto": "Optimización de consultas con índices en MySQL o MariaBD"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/health
+    name: Health Check
+    meta:
+      id: req_3307f917a7ab43a2b21e5552e6300fdc
+      created: 1784325027514
+      modified: 1784325237816
+      isPrivate: false
+      description: ""
+      sortKey: -1784325027514
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/categorias
+    name: Listar Categorías
+    meta:
+      id: req_e70d5e04255d4eb1b190e00aceec7315
+      created: 1784325078051
+      modified: 1785422806728
+      isPrivate: false
+      description: ""
+      sortKey: -1784325003574
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-json
+    name: Clasificar Lote - JSON
+    meta:
+      id: req_4bdebcd5757b48508f2b59639b013e25
+      created: 1784325097590
+      modified: 1785467163445
+      isPrivate: false
+      description: ""
+      sortKey: -1783597056033.5
+    method: POST
+    body:
+      mimeType: application/json
+      text: >
+        {
+          "items": [
+            {
+              "titulo": "Construyendo un limitador de tasa distribuida desde cero",
+              "texto": "Introducción Llega un punto al aprender ingeniería de software en el que usar un..."
+            },
+            {
+              "titulo": "Optimización de consultas PostgreSQL: reducción del tiempo de respuesta de la API de 2,8 segundos a 74 milisegundos",
+              "texto": "Está creando un nuevo punto final de API y necesita validar los datos de la solicitud entrante. La mayoría de nosotros tomamos un..."
+            },
+            {
+              "titulo": "Setting Up PostgreSQL the Right Way",
+              "texto": "The NestJS API from last time can validate a request and return a typed User, but right now that user..."
+            },
+        		{
+              "titulo":"How We Scaled to 1 Million Connections — and the Silent Kernel Bug That Almost Broke It",
+              "texto": "No crashes. No errors. Just connections that vanished — until we found where the kernel was hiding..."
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos
+    name: Listar - buscar contenidos
+    meta:
+      id: req_c444f21faed94b8799629d6eb711ccd4
+      created: 1784551829810
+      modified: 1785469120968
+      isPrivate: false
+      description: ""
+      sortKey: -1784324991604
+    method: GET
+    parameters:
+      - name: q
+        value: docker
+        description: busca en título, texto y términos clave
+        disabled: true
+      - name: categoria
+        value: backend
+        description: filtra por categoría
+        disabled: true
+      - name: limite
+        value: "10"
+        description: ""
+        disabled: true
+      - name: pagina
+        value: "2"
+        description: ""
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-csv
+    name: Clasificar Lote - CSV
+    meta:
+      id: req_63b0712c5ac643ac9e112900cedf998c
+      created: 1785294419506
+      modified: 1785422309999
+      isPrivate: false
+      description: ""
+      sortKey: -1783233094233.25
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: archivo
+          value: ""
+          description: ""
+          disabled: false
+          fileName: C:\Users\jhonny\Downloads\data-test__enpoint-csv.csv
+          type: file
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/38
+    name: Detalle Contenido
+    meta:
+      id: req_1c27b3edc38e40b89d86d49ba3b0a479
+      created: 1785378877386
+      modified: 1785504980847
+      isPrivate: false
+      description: ""
+      sortKey: -1784324997589
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/46
+    name: Eliminar Contenido
+    meta:
+      id: req_064fdd1e6b794181bbaf790b891a864b
+      created: 1785381560349
+      modified: 1785468684529
+      isPrivate: false
+      description: ""
+      sortKey: -1784324994596.5
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/15
+    name: Modificar Contenido
+    meta:
+      id: req_85fcae8073dd4cdfa0014436441d8e56
+      created: 1785383977145
+      modified: 1785422697011
+      isPrivate: false
+      description: ""
+      sortKey: -1783961017833.75
+    method: PUT
+    body:
+      mimeType: application/json
+      text: >-
+        {
+        	"titulo": "Configuración de Docker para el desarrollo local",
+        	"texto": "¡Hola comunidad DEV! 👋 Soy Shahriar Hossain, un ingeniero de software de Dhaka, Bangladesh.  disfruto..."
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/38/clasificacion
+    name: Feedback - Corrige/confirma la categoría
+    meta:
+      id: req_18c18b8035634b74bc830d887a7fc07c
+      created: 1785504850071
+      modified: 1785766963238
+      isPrivate: false
+      description: ""
+      sortKey: -1783779036933.625
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: >-
+        {
+         "nueva_categoria_id": 111,
+        	"usuario": "juan Perez",
+        	"motivo": "es DevOps, non database corregido y no Backend clasificado por ia"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_a6b576800f2e660c5106a481385d4fc3381b865a
+    created: 1784324973018
+    modified: 1784324973018
+environments:
+  name: Base Environment
+  meta:
+    id: env_a6b576800f2e660c5106a481385d4fc3381b865a
+    created: 1784324973012
+    modified: 1784324973012
+    isPrivate: false

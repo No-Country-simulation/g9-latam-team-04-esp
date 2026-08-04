@@ -129,9 +129,37 @@ class CategoriasResponse(BaseModel):
         description="Categorías registradas en el sistema",
     )
 
-class HealthResponse(BaseModel):
-    """Respuesta del endpoint de salud."""
+class ResultadoSemantico(BaseModel):
+    """Un resultado de la búsqueda semántica, con su score de similitud."""
 
-    status: str = Field(..., examples=["ok"])
-    version: str = Field(..., examples=["1.0.0"])
-    model_loaded: bool
+    id: int
+    titulo: str
+    categoria: str
+    informacion_adicional: list[str]
+    idioma: str = "en"
+    creado_en: str
+    similitud: float = Field(
+        ...,
+        ge=-1.0,
+        le=1.0,
+        description="Similitud coseno con la consulta (1.0 = idéntico semánticamente)",
+    )
+
+
+class BusquedaSemanticaResponse(BaseModel):
+    """Respuesta del endpoint de búsqueda semántica."""
+
+    resultados: list[ResultadoSemantico] = Field(
+        ...,
+        description="Lista de contenidos similares encontrados",
+    )
+
+    total: int = Field(
+        ...,
+        description="Cantidad de resultados devueltos",
+    )
+
+class HealthResponse(BaseModel):
+    estado: str
+    clasificador: bool
+    embeddings: bool

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TechKnowledge API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-6 shadow-lg">
+        <div class="max-w-4xl mx-auto px-4">
+            <h1 class="text-3xl font-bold">TechKnowledge</h1>
+            <p class="text-blue-200 mt-1">Organizador Inteligente de Contenido Técnico</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+        <!-- Formulario -->
+        <section class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4">Clasificar contenido</h2>
+            <form id="formClasificar" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Título</label>
+                    <input id="inputTitulo" type="text" required maxlength="500"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                           placeholder="Ej: Introducción a Spring Boot" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Texto</label>
+                    <textarea id="inputTexto" rows="4" required maxlength="10000"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Ej: En este contenido se presentan los conceptos básicos..."></textarea>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Idioma</label>
+                        <select id="inputIdioma" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="auto">Auto</option>
+                            <option value="en">Inglés</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+                    <div class="pt-5">
+                        <button type="submit"
+                                class="bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                            Clasificar
+                        </button>
+                    </div>
+                </div>
+                <!-- <button type="submit"
+                        class="bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                    Clasificar
+                </button> -->
+            </form>
+
+            <!-- Resultado -->
+            <div id="resultado" class="hidden mt-6 p-4 rounded-lg border fade-in"></div>
+        </section>
+
+        <!-- Historial -->
+        <section class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4">Historial</h2>
+
+            <div class="flex gap-2 mb-4">
+                <select id="filtroCategoria" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="">Todas las categorías</option>
+                </select>
+                <button id="btnFiltrar" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Filtrar
+                </button>
+            </div>
+
+            <div id="historial" class="space-y-3">
+                <p class="text-gray-400 text-sm">No hay clasificaciones aún.</p>
+            </div>
+
+            <div id="paginacion" class="hidden flex justify-center gap-2 mt-4"></div>
+        </section>
+
+      
+    </main>
+
+    <script>
+        const API = 'http://127.0.0.1:8000';
+        let paginaActual = 1;
+
+        // ── Cargar categorías al inicio ─────────────────────
+        async function cargarCategorias() {
+            try {
+                const res = await fetch(`${API}/categorias`);
+                const data = await res.json();
+                const select = document.getElementById('filtroCategoria');
+                data.categorias.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.warn('No se pudieron cargar categorías:', e);
+            }
+        }
+
+        // ── Clasificar ───────────────────────────────────────
+        document.getElementById('formClasificar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titulo = document.getElementById('inputTitulo').value.trim();
+            const texto = document.getElementById('inputTexto').value.trim();
+            const idioma = document.getElementById('inputIdioma').value;
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (!titulo || !texto) return;
+
+            resultadoDiv.className = 'hidden';
+            resultadoDiv.innerHTML = '<p class="text-gray-500">Clasificando...</p>';
+            resultadoDiv.className = 'mt-6 p-4 rounded-lg border fade-in bg-gray-50';
+
+            try {
+                const res = await fetch(`${API}/contenido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, texto, idioma }),
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error del servidor');
+                }
+
+                const data = await res.json();
+                mostrarResultado(data);
+                document.getElementById('inputTitulo').value = '';
+                document.getElementById('inputTexto').value = '';
+                cargarHistorial(1);
+
+            } catch (err) {
+                resultadoDiv.innerHTML = `<p class="text-red-600">❌ ${err.message}</p>`;
+                resultadoDiv.className = 'mt-6 p-4 rounded-lg border fade-in bg-red-50 border-red-200';
+            }
+        });
+
+        function mostrarResultado(data) {
+            const div = document.getElementById('resultado');
+            const badges = data.informacion_adicional
+                .map(t => `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">${t}</span>`)
+                .join('');
+
+            const prob = (data.probabilidad * 100).toFixed(1);
+            const langLabel = data.idioma === 'es' ? 'ES' : 'EN';
+
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-lg font-bold">${data.categoria}</span>
+                    <span class="text-sm text-gray-500">${prob}% confianza · ${langLabel}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${prob}%"></div>
+                </div>
+                <div class="flex flex-wrap gap-1">${badges}</div>
+            `;
+            div.className = 'mt-6 p-4 rounded-lg border fade-in bg-white border-blue-200';
+        }
+
+        // ── Historial ────────────────────────────────────────
+        async function cargarHistorial(pagina = 1) {
+            paginaActual = pagina;
+            const categoria = document.getElementById('filtroCategoria').value;
+            let url = `${API}/contenido/historial?pagina=${pagina}&limite=10`;
+            if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                renderizarHistorial(data);
+            } catch (e) {
+                document.getElementById('historial').innerHTML =
+                    '<p class="text-red-500">Error al cargar historial. ¿La API está corriendo?</p>';
+            }
+        }
+
+   function renderizarHistorial(data) {
+    const container = document.getElementById('historial');
+
+    if (data.items.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-sm">No hay clasificaciones aún.</p>';
+        document.getElementById('paginacion').className = 'hidden';
+        return;
+    }
+
+    container.innerHTML = data.items.map(item => {
+        const prob = (item.probabilidad * 100).toFixed(1);
+        const langIcon = item.idioma === 'es' ? 'ES' : 'EN';
+        const terminos = item.terminos.map(t =>
+            `<span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">${t}</span>`
+        ).join(' ');
+
+        // 1. Codificamos las variables de texto aquí para evitar problemas con comillas y 'undefined'
+        const tituloEscapado = encodeURIComponent(item.titulo || '');
+        const textoEscapado = encodeURIComponent(item.texto || '');
+        const idiomaSeguro = item.idioma || 'es';
+
+        return `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                <div class="flex items-start justify-between mb-1">
+                    <div>
+                        <span class="font-semibold text-gray-800">${item.titulo}</span>
+                    </div>
+                    
+                    <!-- Columna derecha: Fecha arriba, botones debajo -->
+                    <div class="flex flex-col items-end gap-1 ml-4 shrink-0">
+                        <span class="text-xs text-gray-400">${item.creado_en}</span>
+                        
+                        <div class="flex gap-1 mt-1">
+                            <!-- Botón Editar con las variables codificadas -->
+                            <button onclick="editarRegistro(${item.id}, '${tituloEscapado}', '${textoEscapado}', '${idiomaSeguro}')" title="Editar" class="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+
+                            <!-- Botón Eliminar -->
+                            <button onclick="eliminarRegistro(${item.id})" title="Eliminar" class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v2M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-500 truncate">${item.texto}</p>
+
+                <div class="flex items-center gap-3 mt-2">
+                    <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-0.5 rounded">${item.categoria}</span>
+                    <span class="text-xs text-gray-400">${prob}%</span>
+                    <span class="text-xs text-gray-400">${langIcon}</span>
+                    <div class="flex flex-wrap gap-0.5 ml-1">${terminos}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Paginación
+    const pagDiv = document.getElementById('paginacion');
+    if (data.total_paginas <= 1) {
+        pagDiv.className = 'hidden';
+        return;
+    }
+
+    let pagHTML = '';
+    for (let i = 1; i <= data.total_paginas; i++) {
+        const active = i === paginaActual ? 'bg-blue-700 text-white' : 'bg-gray-100 hover:bg-gray-200';
+        pagHTML += `<button onclick="cargarHistorial(${i})" class="px-3 py-1 rounded text-sm font-medium ${active}">${i}</button>`;
+    }
+    pagDiv.className = 'flex justify-center gap-2 mt-4';
+    pagDiv.innerHTML = pagHTML;
+}
+
+        // ── Filtro ───────────────────────────────────────────
+        document.getElementById('btnFiltrar').addEventListener('click', () => cargarHistorial(1));
+
+        // ── Init ─────────────────────────────────────────────
+        cargarCategorias();
+        cargarHistorial(1);
+
+        // Abre el modal cargando los datos actuales de la tarjeta
+// ── Abrir Modal con datos cargados ──────────────────────────
+function editarRegistro(id, tituloCodificado, textoCodificado, idioma) {
+    const titulo = decodeURIComponent(tituloCodificado);
+    const texto = decodeURIComponent(textoCodificado);
+
+    // Asignamos los datos a los inputs del modal
+    document.getElementById('editId').value = id;
+    document.getElementById('editTitulo').value = titulo;
+    document.getElementById('editTexto').value = texto;
+    document.getElementById('editIdioma').value = idioma || 'es';
+
+    // Mostrar modal
+    document.getElementById('modalEditar').classList.remove('hidden');
+}
+
+function cerrarModalEditar() {
+    document.getElementById('modalEditar').classList.add('hidden');
+}
+
+// ── Guardar Cambios (PUT) ──────────────────────────────────
+async function guardarEdicion(event) {
+    if (event) event.preventDefault();
+
+    const id = document.getElementById('editId').value;
+    const titulo = document.getElementById('editTitulo').value.trim();
+    const texto = document.getElementById('editTexto').value.trim();
+    const idioma = document.getElementById('editIdioma').value;
+
+    try {
+        const res = await fetch(`${API}/contenido/${id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ titulo, texto, idioma })
+        });
+
+        if (!res.ok) {
+            // Leemos como texto primero para no romper el parser de JSON si el servidor falla con HTML
+            const errorTexto = await res.text();
+            console.error("Error del servidor (Status " + res.status + "):", errorTexto);
+            throw new Error(`El servidor devolvió un error ${res.status}. Revisa la consola de Python/FastAPI.`);
+        }
+
+        const data = await res.json();
+        cerrarModalEditar();
+        cargarHistorial(paginaActual);
+
+    } catch (error) {
+        alert(`❌ ${error.message}`);
+    }
+}
+
+async function eliminarRegistro(id) {
+    // 1. Preguntar confirmación al usuario antes de proceder
+    const confirmado = confirm("¿Estás seguro de que deseas eliminar este registro permanentemente?");
+    if (!confirmado) {
+        return; // Si el usuario presiona "Cancelar", no hace nada
+    }
+
+    try {
+        const res = await fetch(`${API}/contenido/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!res.ok) {
+            // Si hay un error, intentamos leer el detalle
+            const errorTexto = await res.text();
+            throw new Error(`Error ${res.status}: No se pudo eliminar el registro.`);
+        }
+
+        // 2. Dado que el backend responde con 204 (No Content), NO llamamos a res.json().
+        // Simplemente recargamos la lista actualizada:
+        cargarHistorial(paginaActual);
+
+    } catch (error) {
+        console.error("Error al eliminar:", error);
+        alert(`❌ Error: ${error.message}`);
+    }
+}
+    </script>
+
+    <!-- Modal de Edición -->
+<div id="modalEditar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Editar Clasificación</h3>
+        
+        <input type="hidden" id="editId">
+        
+        <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+            <input type="text" id="editTitulo" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Texto</label>
+            <textarea id="editTexto" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+            <select id="editIdioma" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+            </select>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <button onclick="cerrarModalEditar()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm font-medium hover:bg-gray-300 transition-colors">Cancelar</button>
+            <button type="button" onclick="guardarEdicion(event)" class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700">
+    Guardar Cambios
+</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

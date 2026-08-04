@@ -1,0 +1,338 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: g9-latam-team-04-esp
+meta:
+  id: wrk_1f59f04f4b204509b67f4f2d2548af17
+  created: 1785783736417
+  modified: 1785783736417
+  description: ""
+collection:
+  - url: http://localhost:8000/contenido
+    name: Clasificar Contenido
+    meta:
+      id: req_5126585274a1498cb2befc1fc2ba6c26
+      created: 1784324979634
+      modified: 1785856505585
+      isPrivate: false
+      description: ""
+      sortKey: -1784324979634
+    method: POST
+    body:
+      mimeType: application/json
+      text: >-
+        {
+          "titulo": "Gestión de estado global con Redux Toolkit y Zustand",
+          "texto": "Comparativa de patrones para la manipulación y sincronización de datos de la interfaz de usuario en el cliente."
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/health
+    name: Health Check
+    meta:
+      id: req_c409a530f8624d6e8f5845e8fb018f8c
+      created: 1784325027514
+      modified: 1785786383409
+      isPrivate: false
+      description: ""
+      sortKey: -1784325027514
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/categorias
+    name: Listar Categorías
+    meta:
+      id: req_f73395c013d84e16a42f4627deb64fad
+      created: 1784325078051
+      modified: 1785422806728
+      isPrivate: false
+      description: ""
+      sortKey: -1784325003574
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-json
+    name: Clasificar Lote - JSON
+    meta:
+      id: req_0aa36e8d6e39486c9eaf38a3186ea979
+      created: 1784325097590
+      modified: 1785467163445
+      isPrivate: false
+      description: ""
+      sortKey: -1783597056033.5
+    method: POST
+    body:
+      mimeType: application/json
+      text: >
+        {
+          "items": [
+            {
+              "titulo": "Construyendo un limitador de tasa distribuida desde cero",
+              "texto": "Introducción Llega un punto al aprender ingeniería de software en el que usar un..."
+            },
+            {
+              "titulo": "Optimización de consultas PostgreSQL: reducción del tiempo de respuesta de la API de 2,8 segundos a 74 milisegundos",
+              "texto": "Está creando un nuevo punto final de API y necesita validar los datos de la solicitud entrante. La mayoría de nosotros tomamos un..."
+            },
+            {
+              "titulo": "Setting Up PostgreSQL the Right Way",
+              "texto": "The NestJS API from last time can validate a request and return a typed User, but right now that user..."
+            },
+        		{
+              "titulo":"How We Scaled to 1 Million Connections — and the Silent Kernel Bug That Almost Broke It",
+              "texto": "No crashes. No errors. Just connections that vanished — until we found where the kernel was hiding..."
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/historial
+    name: Listar - buscar contenidos
+    meta:
+      id: req_fd3ca7fc471c440d8214f954e7eac76e
+      created: 1784551829810
+      modified: 1785853041224
+      isPrivate: false
+      description: ""
+      sortKey: -1784324991604
+    method: GET
+    parameters:
+      - name: q
+        value: docker
+        description: busca en título, texto y términos clave
+        disabled: true
+      - name: categoria
+        value: backend
+        description: filtra por categoría
+        disabled: true
+      - name: limite
+        value: "10"
+        description: ""
+        disabled: true
+      - name: pagina
+        value: "2"
+        description: ""
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-csv
+    name: Clasificar Lote - CSV
+    meta:
+      id: req_7322a4cb451a47a98f60cd30db65f1e4
+      created: 1785294419506
+      modified: 1785422309999
+      isPrivate: false
+      description: ""
+      sortKey: -1783233094233.25
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: archivo
+          value: ""
+          description: ""
+          disabled: false
+          fileName: C:\Users\jhonny\Downloads\data-test__enpoint-csv.csv
+          type: file
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/5
+    name: Detalle Contenido
+    meta:
+      id: req_cb1c3bc31c144ba9beae75d2f74258ab
+      created: 1785378877386
+      modified: 1785787342264
+      isPrivate: false
+      description: ""
+      sortKey: -1784324997589
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/46
+    name: Eliminar Contenido
+    meta:
+      id: req_3046b1896d3b4907963613564c5e495c
+      created: 1785381560349
+      modified: 1785468684529
+      isPrivate: false
+      description: ""
+      sortKey: -1784324994596.5
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/5
+    name: Modificar Contenido
+    meta:
+      id: req_cfc58dfee3af4724a1d263bb637eedc9
+      created: 1785383977145
+      modified: 1785788237311
+      isPrivate: false
+      description: ""
+      sortKey: -1783961017833.75
+    method: PUT
+    body:
+      mimeType: application/json
+      text: >-
+        {
+
+        "titulo": "Gestión de Estado con Redux",
+
+        "texto": "Uso de actions, reducers y el store global para manejar flujos
+        de datos complejos"
+
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/38/clasificacion
+    name: Feedback - Corrige/confirma la categoría
+    meta:
+      id: req_a6af7d935b3a4fcca0bb6433cf8e2511
+      created: 1785504850071
+      modified: 1785766963238
+      isPrivate: false
+      description: ""
+      sortKey: -1783779036933.625
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: >-
+        {
+         "nueva_categoria_id": 111,
+        	"usuario": "juan Perez",
+        	"motivo": "es DevOps, non database corregido y no Backend clasificado por ia"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/busqueda-semantica
+    name: Busqueda semantica
+    meta:
+      id: req_14d760f8fa274c3b970f0b5867b491c2
+      created: 1785783764315
+      modified: 1785856556302
+      isPrivate: false
+      description: ""
+      sortKey: -1785783764315
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "texto_consulta": "componentes reutilizables e interfaces de usuario",
+          "top_n": 5
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/historial
+    name: Historial
+    meta:
+      id: req_05558d82206d4f09a14d557232200479
+      created: 1785858959939
+      modified: 1785858978501
+      isPrivate: false
+      description: ""
+      sortKey: -1785858959939
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_477d775932a24c5c879cb143e6624270
+    created: 1784324973018
+    modified: 1784324973018
+environments:
+  name: Base Environment
+  meta:
+    id: env_2369b10dd0f54b8ba701371a8bbbe445
+    created: 1784324973012
+    modified: 1784324973012
+    isPrivate: false

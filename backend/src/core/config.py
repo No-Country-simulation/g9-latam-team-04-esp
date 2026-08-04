@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     app_name: str = "TechKnowledge"
     app_version: str = "1.0.0"
     debug: bool = False
-    cors_origins: list[str] = ["*"]
+    cors_origins: list[str] = ["http://localhost:5500", "http://127.0.0.1:5500"]
 
     # Modelos de clasificación
     # Inglés

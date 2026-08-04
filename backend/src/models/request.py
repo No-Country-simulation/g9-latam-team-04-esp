@@ -146,3 +146,58 @@ class ContenidoBatchRequest(BaseModel):
         max_length=100,
         description="Lista de contenidos a clasificar",
     )
+
+
+class BusquedaSemanticaRequest(BaseModel):
+    """Cuerpo esperado por POST /contenidos/busqueda-semantica."""
+
+    texto_consulta: str = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        examples=["¿Cómo crear una API REST con Spring Boot?"],
+        description="Texto utilizado para realizar la búsqueda semántica.",
+    )
+
+    top_n: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Cantidad máxima de resultados a devolver.",
+    )
+
+    categoria: str | None = Field(
+        default=None,
+        examples=["Backend"],
+        description="Filtra los resultados por categoría (opcional).",
+    )
+
+    @field_validator("texto_consulta", mode="before")
+    @classmethod
+    def normalizar(cls, v: str) -> str:
+        return normalizar_texto(v)
+
+    @field_validator("texto_consulta")
+    @classmethod
+    def validar_caracteres_control(cls, v: str) -> str:
+        return rechazar_caracteres_control(v)
+
+    @field_validator("texto_consulta")
+    @classmethod
+    def validar_patrones_repetitivos(cls, v: str) -> str:
+        return rechazar_patrones_repetitivos(v)
+
+    @field_validator("texto_consulta")
+    @classmethod
+    def validar_palabra_repetida(cls, v: str) -> str:
+        return rechazar_palabra_repetida(v)
+
+    @field_validator("texto_consulta")
+    @classmethod
+    def validar_solo_especiales(cls, v: str) -> str:
+        return rechazar_solo_especiales(v)
+
+    @field_validator("texto_consulta")
+    @classmethod
+    def validar_demasiado_ruido(cls, v: str) -> str:
+        return rechazar_demasiado_ruido(v)
