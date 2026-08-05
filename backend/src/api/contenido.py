@@ -11,16 +11,19 @@ Endpoints de clasificación de contenido técnico.
 ``POST /contenidos/busqueda-semantica``   - Busca contenidos por significado (embeddings)
 ``GET  /categorias``                      - Lista las categorías disponibles
 ``PATCH /contenidos/{id}/clasificacion``  - Corrige/confirma la categoría de un contenido
+``GET  /contenidos/exportar-dataset``     - Exporta el dataset de entrenamiento (CSV/JSON)
 ``GET  /health``                          - Health check del servicio
 """
 import csv
 import io
+from typing import Literal
 
 from fastapi import (
     APIRouter,
     File,
     HTTPException,
     Query,
+    Response,
     UploadFile,
     status,
 )
@@ -30,6 +33,7 @@ from ..core.database import (
     buscar_por_similitud,
     corregir_clasificacion,
     eliminar_contenido,
+    exportar_dataset,
     guardar_clasificacion,
     listar_categorias,
     listar_contenidos,
@@ -628,6 +632,50 @@ async def corregir_clasificacion_endpoint(
         )
 
     return CorreccionClasificacionResponse(**resultado)
+
+@router.get(
+    "/contenidos/exportar-dataset",
+    status_code=status.HTTP_200_OK,
+    summary="Exportar dataset de entrenamiento",
+    description="Exporta contenidos clasificados como CSV o JSON con columnas "
+    "titulo, texto y categoria (la vigente). Filtra por idioma y opcionalmente "
+    "solo los contenidos verificados por humanos (ground truth). "
+    "Formato por defecto: CSV descargable.",
+)
+async def exportar_dataset_endpoint(
+    idioma: Literal["en", "es", "todos"] = Query(
+        "todos", description="Idioma de los contenidos a exportar"
+    ),
+    solo_verificados: bool = Query(
+        True,
+        description="True: solo contenidos con feedback humano (ground truth). "
+        "False: todos, con la categoría vigente.",
+    ),
+    formato: Literal["csv", "json"] = Query(
+        "csv", description="Formato de salida: csv (descargable) o json"
+    ),
+):
+    """Exporta el dataset de entrenamiento desde la BD."""
+    filas = exportar_dataset(idioma=idioma, solo_verificados=solo_verificados)
+
+    sufijo = "" if idioma == "todos" else f"_{idioma}"
+    prefijo = "feedback" if solo_verificados else "contenidos"
+    nombre_base = f"dataset_{prefijo}{sufijo}"
+
+    if formato == "json":
+        return filas
+
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=["titulo", "texto", "categoria"])
+    writer.writeheader()
+    writer.writerows(filas)
+    csv_texto = buffer.getvalue()
+
+    return Response(
+        content=csv_texto,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre_base}.csv"'},
+    )
 
 @router.get(
     "/health",

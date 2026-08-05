@@ -882,3 +882,63 @@ def corregir_clasificacion(
                 "motivo": motivo,
                 "creado_en": datetime.now(timezone.utc).isoformat(),
             }
+
+def exportar_dataset(
+    idioma: str = "todos",
+    solo_verificados: bool = True,
+) -> list[dict]:
+    """
+    Exporta contenidos clasificados como dataset de entrenamiento.
+
+    Devuelve filas con ``titulo``, ``texto`` y ``categoria`` (la vigente,
+    es decir la última corrección humana si la hubo).
+
+    Parameters
+    ----------
+    idioma : "en" | "es" | "todos"
+        Filtra por idioma del contenido. Con ``todos`` no filtra.
+    solo_verificados : bool
+        ``True`` → solo contenidos con feedback humano (ground truth puro).
+        ``False`` → todos, usando la categoría vigente (los no verificados
+        quedan con la predicción del modelo, pseudo-etiquetas).
+
+    Returns
+    -------
+    list[dict]
+        Lista de filas ``{"titulo", "texto", "categoria"}``.
+    """
+    conditions: list[str] = []
+    params: dict[str, Any] = {}
+
+    if idioma in ("en", "es"):
+        params["idioma"] = idioma
+        conditions.append("c.idioma = :idioma")
+
+    if solo_verificados:
+        conditions.append(
+            "EXISTS (SELECT 1 FROM feedback_clasificacion f "
+            "WHERE f.contenido_id = c.id)"
+        )
+
+    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+    items: list[dict] = []
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT c.titulo, c.texto, cat.nombre AS categoria
+                FROM contenidos c
+                JOIN clasificaciones cl ON cl.contenido_id = c.id
+                JOIN categorias cat ON cl.categoria_id = cat.id
+                {where_clause}
+                ORDER BY c.id
+            """, params)
+
+            # Leer los CLOB DENTRO de la conexión: oracledb los resuelve de forma
+            # perezosa y hace .read() con la conexión ya cerrada tira
+            # DPY-1001 (not connected to database).
+            for titulo, texto_raw, categoria in cursor:
+                texto = texto_raw.read() if hasattr(texto_raw, "read") else str(texto_raw)
+                items.append({"titulo": titulo, "texto": texto, "categoria": categoria})
+
+    return items
