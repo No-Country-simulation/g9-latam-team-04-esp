@@ -11,6 +11,21 @@ from pydantic import BaseModel, Field
 class ContenidoResponse(BaseModel):
     """Resultado de la clasificación de un contenido."""
 
+
+    id: int | None = Field(
+        None,
+        description="ID en el historial (si se persistió)",
+    )
+    titulo: str | None = Field(
+        None,
+        examples=["Introducción a Spring Boot"],
+        description="Título del contenido técnico",
+    )
+    texto: str | None = Field(
+        None,
+        examples=["Spring Boot es un framework para crear aplicaciones Java..."],
+        description="Texto completo del contenido técnico",
+    )
     categoria: str = Field(
         ...,
         examples=["Backend"],
@@ -32,10 +47,6 @@ class ContenidoResponse(BaseModel):
         "en",
         examples=["es", "en"],
         description="Idioma detectado o forzado del contenido",
-    )
-    id: int | None = Field(
-        None,
-        description="ID en el historial (si se persistió)",
     )
 
 class ItemResultadoBatch(BaseModel):
@@ -129,9 +140,40 @@ class CategoriasResponse(BaseModel):
         description="Categorías registradas en el sistema",
     )
 
+class ResultadoSemantico(BaseModel):
+    """Un resultado de la búsqueda semántica, con su score de similitud."""
+
+    id: int
+    titulo: str
+    categoria: str
+    informacion_adicional: list[str]
+    idioma: str = "en"
+    similitud: float = Field(
+        ...,
+        ge=-1.0,
+        le=1.0,
+        description="Similitud coseno con la consulta (1.0 = idéntico semánticamente)",
+    )
+    creado_en: str
+
+
+class BusquedaSemanticaResponse(BaseModel):
+    """Respuesta del endpoint de búsqueda semántica."""
+
+    resultados: list[ResultadoSemantico] = Field(
+        ...,
+        description="Lista de contenidos similares encontrados",
+    )
+
+    total: int = Field(
+        ...,
+        description="Cantidad de resultados devueltos",
+    )
+
 class HealthResponse(BaseModel):
     """Respuesta del endpoint de salud."""
-
+    
     status: str = Field(..., examples=["ok"])
     version: str = Field(..., examples=["1.0.0"])
     model_loaded: bool
+    embeddings: bool

@@ -10,6 +10,7 @@ Funciona con FreeSQL.com, Docker, y OCI Autonomous Database.
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
+import array
 
 import oracledb
 
@@ -104,7 +105,33 @@ def init_db() -> None:
             _crear_indice(cursor, "idx_feedback_contenido", "feedback_clasificacion", "contenido_id")
             # Una clasificación vigente por contenido (evita duplicados)
             _crear_indice_unico(cursor, "uq_clasif_contenido", "clasificaciones", "contenido_id")
+
+            # Búsqueda semántica: columna de embeddings (Oracle 23ai+/VECTOR nativo)
+            _migrar_columna_embedding(cursor)
         conn.commit()
+
+
+def _migrar_columna_embedding(cursor: oracledb.Cursor) -> None:
+    """Agrega la columna ``embedding`` a ``contenidos`` si no existe.
+
+    Oracle no tiene ``ALTER TABLE ... ADD COLUMN IF NOT EXISTS``, así que
+    se verifica primero contra ``user_tab_columns`` (mismo patrón que
+    ``_crear_indice`` usa con ``user_indexes``).
+
+    Requiere Oracle Database 23ai o superior (tipo ``VECTOR`` nativo).
+    """
+    cursor.execute(
+        """
+        SELECT COUNT(*) FROM user_tab_columns
+        WHERE table_name = 'CONTENIDOS' AND column_name = 'EMBEDDING'
+        """
+    )
+    if cursor.fetchone()[0] > 0:
+        return
+
+    cursor.execute(
+        "ALTER TABLE contenidos ADD (embedding VECTOR(384, FLOAT32))"
+    )
 
 def _crear_indice(cursor: oracledb.Cursor, nombre: str, tabla: str, columnas: str) -> None:
     """Crea un índice si no existe (Oracle no tiene IF NOT EXISTS para índices)."""
@@ -147,9 +174,17 @@ def guardar_clasificacion(
     probabilidad: float,
     terminos_clave: list[dict],  # [{"palabra": "...", "peso": 0.xx}, ...]
     idioma: str = "en",
+    embedding: list[float] | None = None,
 ) -> int:
     """
     Guarda una clasificación completa en el schema normalizado.
+
+    Parameters
+    ----------
+    embedding : list[float] | None
+        Vector de embedding (384 dims) para búsqueda semántica. Si es
+        ``None``, la fila queda sin embedding y no aparece en resultados
+        de ``/contenidos/busqueda-semantica`` hasta que se recalcule.
 
     Returns
     -------
@@ -179,11 +214,17 @@ def guardar_clasificacion(
             contenido_id_out = cursor.var(int)
             cursor.execute(
                 """
-                INSERT INTO contenidos (titulo, texto, idioma)
-                VALUES (:titulo, :texto, :idioma)
+                INSERT INTO contenidos (titulo, texto, idioma, embedding)
+                VALUES (:titulo, :texto, :idioma, :embedding)
                 RETURNING id INTO :id_out
                 """,
-                {"titulo": titulo, "texto": texto, "idioma": idioma, "id_out": contenido_id_out},
+                {
+                    "titulo": titulo,
+                    "texto": texto,
+                    "idioma": idioma,
+                    "embedding": array.array("f", embedding) if embedding else None,
+                    "id_out": contenido_id_out,
+                },
             )
             contenido_id = contenido_id_out.getvalue()[0]
 
@@ -464,6 +505,96 @@ def buscar_contenidos_por_palabra(
 
     return items, total
 
+
+def buscar_por_similitud(
+    embedding: list[float],
+    top_n: int = 5,
+    categoria: str | None = None,
+) -> list[dict]:
+    """
+    Busca los contenidos semánticamente más parecidos a ``embedding``.
+
+    Usa ``VECTOR_DISTANCE(..., COSINE)`` nativo de Oracle (23ai+): la
+    distancia coseno va de 0 (idéntico) a 2 (opuesto), así que se convierte
+    a similitud con ``1 - distancia`` para que sea consistente con
+    ``calcular_similitud_coseno`` si en algún momento se agrega un fallback
+    en Python.
+
+    No requiere traer todos los embeddings a memoria — la BD hace el
+    cálculo y el ordenamiento; solo bajan las ``top_n`` filas finales.
+    Sin índice vectorial esto es un escaneo completo de la tabla
+    (fuerza bruta), aceptable para el volumen de un hackathon. Si el
+    volumen de datos crece, agregar un ``CREATE VECTOR INDEX`` sobre
+    ``contenidos.embedding`` con ``DISTANCE COSINE``.
+
+    Contenidos sin embedding (``embedding IS NULL``, p. ej. si se guardaron
+    antes de esta migración) quedan afuera automáticamente.
+
+    Parameters
+    ----------
+    embedding : list[float]
+        Vector de la consulta (mismas dimensiones que la columna, 384).
+    top_n : int
+        Cantidad máxima de resultados.
+    categoria : str | None
+        Filtro opcional por nombre de categoría.
+
+    Returns
+    -------
+    list[dict] : cada item con ``id``, ``titulo``, ``categoria``,
+    ``informacion_adicional``, ``idioma``, ``creado_en``, ``similitud``.
+    """
+    condiciones = ["c.embedding IS NOT NULL"]
+    params: dict[str, Any] = {
+        "query_vec": array.array("f", embedding),
+        "top_n": top_n,
+    }
+
+    if categoria:
+        condiciones.append("cat.nombre = :categoria")
+        params["categoria"] = categoria
+
+    where_clause = " AND ".join(condiciones)
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT
+                    c.id,
+                    c.titulo,
+                    cat.nombre AS categoria,
+                    c.idioma,
+                    c.creado_en,
+                    VECTOR_DISTANCE(c.embedding, :query_vec, COSINE) AS distancia
+                FROM contenidos c
+                JOIN clasificaciones cl ON c.id = cl.contenido_id
+                JOIN categorias cat    ON cl.categoria_id = cat.id
+                WHERE {where_clause}
+                ORDER BY distancia ASC
+                FETCH FIRST :top_n ROWS ONLY
+                """,
+                params,
+            )
+            rows = cursor.fetchall()
+
+    resultados = []
+    for row in rows:
+        contenido_id = row[0]
+        resultados.append({
+    "id": contenido_id,
+    "titulo": row[1],
+    "categoria": row[2],
+    "idioma": row[3],
+    "creado_en": _fmt_dt(row[4]),
+    "similitud": round(1.0 - float(row[5]), 4),
+    "informacion_adicional": [
+        t["palabra"] for t in obtener_terminos_por_contenido(contenido_id)
+    ],
+})
+    return resultados
+
+
 def listar_categorias() -> list[dict]:
     """Devuelve todas las categorías con su ``id`` y ``nombre``."""
     with get_connection() as conn:
@@ -547,7 +678,7 @@ def eliminar_contenido(contenido_id: int) -> bool:
             return True
 
 
-def actualizar_contenido(
+def actualizar_contenido_db(
     contenido_id: int,
     titulo: str,
     texto: str,
@@ -555,6 +686,7 @@ def actualizar_contenido(
     categoria: str,
     probabilidad: float,
     terminos_clave: list[dict],
+    embedding:list[float] = None,
 ) -> dict | None:
     """
     Actualiza un contenido existente y su clasificación.
@@ -572,12 +704,49 @@ def actualizar_contenido(
             if not cursor.fetchone():
                 return None
 
-            # 1. Actualizar contenido
-            cursor.execute("""
-                UPDATE contenidos
-                SET titulo = :titulo, texto = :texto, idioma = :idioma
-                WHERE id = :cid
-            """, {"titulo": titulo, "texto": texto, "idioma": idioma, "cid": contenido_id})
+          # 1. Actualizar contenido (incluyendo el embedding si existe)
+
+            if embedding is not None:
+
+                vector = array.array("f", embedding)
+
+                cursor.execute(
+                    """
+                    UPDATE contenidos
+                    SET
+                        titulo = :titulo,
+                        texto = :texto,
+                        idioma = :idioma,
+                        embedding = :embedding
+                    WHERE id = :cid
+                    """,
+                    {
+                        "titulo": titulo,
+                        "texto": texto,
+                        "idioma": idioma,
+                        "embedding": vector,
+                        "cid": contenido_id,
+                    },
+                )
+
+            else:
+
+                cursor.execute(
+                    """
+                    UPDATE contenidos
+                    SET
+                        titulo = :titulo,
+                        texto = :texto,
+                        idioma = :idioma
+                    WHERE id = :cid
+                    """,
+                    {
+                        "titulo": titulo,
+                        "texto": texto,
+                        "idioma": idioma,
+                        "cid": contenido_id,
+                    },
+                )
 
             # 2. Eliminar datos de clasificación anteriores
             cursor.execute(
