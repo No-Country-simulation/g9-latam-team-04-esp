@@ -24,6 +24,7 @@ show_help() {
     echo "Uso: ./techmind.sh [comando]"
     echo ""
     echo "Comandos disponibles:"
+    echo "  build     Construye las imágenes."
     echo "  up        Levanta todos los servicios en segundo plano."
     echo "  down      Detiene y remueve los contenedores."
     echo "  rebuild   Reconstruye las imágenes e inicia los servicios."
@@ -36,8 +37,13 @@ show_help() {
 PARAM=${1:-up}
 
 case "$PARAM" in
+    build)
+        echo "🟢 Construyendo imágenes..."
+        cp .env.desarrollo .env
+        $DOCKER_COMPOSE build
+        ;;
     up)
-        echo "🟢 Levantando el entorno (UID: $CURRENT_UID, GID: $CURRENT_GID)..."
+        echo "🟢 Levantando el entorno..."
         $DOCKER_COMPOSE up -d
         ;;
     down)

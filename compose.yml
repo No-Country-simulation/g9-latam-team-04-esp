@@ -55,6 +55,8 @@ services:
       - TK_DEFAULT_LANGUAGE=${TK_DEFAULT_LANGUAGE:-auto}
     volumes:
       - ./backend/src:/app/src # Live-reloading en desarrollo
+      - ./data-science/models:/app/data-science/models # Modelos de ML
+      - ./shared:/app/shared # Stop words
     depends_on:
       - oracle-db
     networks:

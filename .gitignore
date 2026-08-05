@@ -26,4 +26,7 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 
+# Frontend
+frontend/env-config.js
+
 # Docs

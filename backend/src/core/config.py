@@ -17,11 +17,11 @@ class Settings(BaseSettings):
 
     # Modelos de clasificación
     # Inglés
-    model_path_en: Path = Path("/app/data-science/models/en/model_en.joblib")
-    vectorizer_path_en: Path = Path("/app/data-science/models/en/vectorizer_en.joblib")
+    model_path_en: Path = Path("data-science/models/en/model_en.joblib")
+    vectorizer_path_en: Path = Path("data-science/models/en/vectorizer_en.joblib")
     # Español
-    model_path_es: Path = Path("/app/data-science/models/es/model_es.joblib")
-    vectorizer_path_es: Path = Path("/app/data-science/models/es/vectorizer_es.joblib")
+    model_path_es: Path = Path("data-science/models/es/model_es.joblib")
+    vectorizer_path_es: Path = Path("data-science/models/es/vectorizer_es.joblib")
 
     # Oracle Database
     # Pydantic buscará automáticamente TK_ORACLE_USER, TK_ORACLE_PASSWORD, etc.

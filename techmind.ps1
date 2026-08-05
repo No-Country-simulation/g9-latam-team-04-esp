@@ -8,6 +8,16 @@
     .\run.ps1 logs
 #>
 
+# Detectar el comando de Docker Compose (v2 'docker compose' o v1 'docker-compose')
+if (Get-Command docker compose -ErrorAction SilentlyContinue) {
+    $DOCKER_COMPOSE = "docker compose"
+} elseif (Get-Command docker-compose -ErrorAction SilentlyContinue) {
+    $DOCKER_COMPOSE = "docker-compose"
+} else {
+    Write-Host "❌ Error: Docker Compose no está instalado." -ForegroundColor Red
+    exit 1
+}
+
 param (
     [string]$Command = "up"
 )
@@ -22,6 +32,7 @@ function Show-Help {
     Write-Host "Uso: .\techmind.ps1 [comando]"
     Write-Host ""
     Write-Host "Comandos disponibles:"
+    Write-Host "  build     Construye las imágenes."
     Write-Host "  up        Levanta todos los servicios en segundo plano."
     Write-Host "  down      Detiene y remueve los contenedores."
     Write-Host "  rebuild   Reconstruye las imágenes e inicia los servicios."
@@ -30,24 +41,29 @@ function Show-Help {
 }
 
 switch ($Command.ToLower()) {
+    "build" {
+        Write-Host "🟢 Construyendo imágenes..." -ForegroundColor Cyan
+        Copy-Item .\.env.desarrollo .\.env -Force
+        & $DOCKER_COMPOSE build
+    }
     "up" {
         Write-Host "🟢 Levantando el entorno con Docker Compose..." -ForegroundColor Green
-        docker compose up -d
+        & $DOCKER_COMPOSE up -d
     }
     "down" {
         Write-Host "🔴 Deteniendo servicios..." -ForegroundColor Red
-        docker compose down
+        & $DOCKER_COMPOSE down
     }
     "rebuild" {
         Write-Host "🔄 Reconstruyendo imágenes y levantando..." -ForegroundColor Yellow
-        docker compose up -d --build
+        & $DOCKER_COMPOSE up -d --build
     }
     "logs" {
-        docker compose logs -f
+        & $DOCKER_COMPOSE logs -f
     }
     "clean" {
         Write-Host "⚠️ Eliminando contenedores, redes y volúmenes de datos..." -ForegroundColor Red
-        docker compose down -v
+        & $DOCKER_COMPOSE down -v
     }
     default {
         Show-Help

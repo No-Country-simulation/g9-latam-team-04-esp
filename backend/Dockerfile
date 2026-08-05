@@ -14,12 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código fuente del backend
 COPY ./src /app/src
 
-# Copiar modelos de ML necesarios para el clasificador
-COPY ../data-science/models /app/data-science/models
-
-# Copiar directorio shared (stop words)
-COPY ../shared /app/shared
-
 EXPOSE 8000
 
 # Ejecutamos FastAPI usando variables de entorno para host y puerto
