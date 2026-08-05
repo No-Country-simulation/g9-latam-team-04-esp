@@ -1,0 +1,91 @@
+services:
+  # Base de Datos Relacional Oracle (Free / XE)
+  oracle-db:
+    image: gvenzl/oracle-free:23-slim
+    container_name: oracle_techknowledge
+    restart: always
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-root_password}
+      APP_USER: ${ORACLE_USER:-api_user}
+      APP_USER_PASSWORD: ${ORACLE_PASSWORD:-api_password}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    networks:
+      - tech_network
+
+  # Almacenamiento de Modelos (Simulación de OCI Object Storage)
+  model-storage:
+    image: minio/minio:latest
+    container_name: minio_storage
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+    ports:
+      - "9000:9000" # API REST S3/OCI
+      - "9001:9001" # Consola Web
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - tech_network
+
+  # Backend API (Lógica de negocio y persistencia)
+  backend:
+    build:
+      context: ./backend
+    container_name: api_principal
+    # Asigna el UID/GID del script en Linux, o 1000:1000 en Windows/macOS
+    user: "${CURRENT_UID:-1000}:${CURRENT_GID:-1000}"
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      # --- Variables de Entorno TK_ (leídas desde .env) ---
+      - TK_DEBUG=${TK_DEBUG:-false}
+      - TK_HOST=${TK_HOST:-0.0.0.0}
+      - TK_PORT=${TK_PORT:-8000}
+      - TK_CORS_ORIGINS=${TK_CORS_ORIGINS:-["*"]}
+      - TK_ORACLE_USER=${TK_ORACLE_USER}
+      - TK_ORACLE_PASSWORD=${TK_ORACLE_PASSWORD}
+      - TK_ORACLE_DSN=${TK_ORACLE_DSN}
+      - TK_ORACLE_WALLET_DIR=${TK_ORACLE_WALLET_DIR}
+      - TK_ORACLE_WALLET_PASSWORD=${TK_ORACLE_WALLET_PASSWORD}
+      - TK_DEFAULT_LANGUAGE=${TK_DEFAULT_LANGUAGE:-auto}
+    volumes:
+      - ./backend/src:/app/src # Live-reloading en desarrollo
+    depends_on:
+      - oracle-db
+    networks:
+      - tech_network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+    container_name: web_frontend
+    restart: on-failure
+    ports:
+      - "80:80"
+    environment:
+      - ENVIRONMENT=development
+      - TK_BE_URL=${TK_BE_URL} # Variable leída desde .env en la raíz
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/app.js:/usr/share/nginx/html/app.js:ro
+      - ./frontend/styles.css:/usr/share/nginx/html/styles.css:ro
+    depends_on:
+      - backend
+    networks:
+      - tech_network
+
+# Volúmenes persistentes
+volumes:
+  oracle_data:
+  minio_data:
+
+# Red interna
+networks:
+  tech_network:
+    driver: bridge

@@ -12,26 +12,30 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     debug: bool = False
     cors_origins: list[str] = ["*"]
+    host: str = "0.0.0.0"  # Pydantic buscará TK_HOST automáticamente
+    port: int = 8000  # Pydantic buscará TK_PORT automáticamente
 
     # Modelos de clasificación
     # Inglés
-    model_path_en: Path = Path("data-science/models/en/model_en.joblib")
-    vectorizer_path_en: Path = Path("data-science/models/en/vectorizer_en.joblib")
+    model_path_en: Path = Path("/app/data-science/models/en/model_en.joblib")
+    vectorizer_path_en: Path = Path("/app/data-science/models/en/vectorizer_en.joblib")
     # Español
-    model_path_es: Path = Path("data-science/models/es/model_es.joblib")
-    vectorizer_path_es: Path = Path("data-science/models/es/vectorizer_es.joblib")
+    model_path_es: Path = Path("/app/data-science/models/es/model_es.joblib")
+    vectorizer_path_es: Path = Path("/app/data-science/models/es/vectorizer_es.joblib")
 
     # Oracle Database
-    oracle_user: str = "USERNAME_SCHEMA_SGOEJ"
+    # Pydantic buscará automáticamente TK_ORACLE_USER, TK_ORACLE_PASSWORD, etc.
+    oracle_user: str = ""
     oracle_password: str = ""
-    oracle_dsn: str = "tcps://db.freesql.com:2484/23ai_34ui2"
+    oracle_dsn: str = ""
     oracle_wallet_dir: str | None = None
     oracle_wallet_password: str | None = None
 
     # OCI Object Storage
+    # Pydantic buscará automáticamente TK_OCI_ENABLED, TK_OCI_BUCKET_NAME, etc.
     oci_enabled: bool = False
     oci_config_path: Path | None = None
-    oci_bucket_name: str = "techknowledge-models"
+    oci_bucket_name: str = ""
     oci_namespace: str = ""
 
     # Lenguaje por defecto

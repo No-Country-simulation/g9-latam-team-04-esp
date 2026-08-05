@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TechKnowledge API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="env-config.js"></script>
+    <script src="app.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-6 shadow-lg">
+        <div class="max-w-4xl mx-auto px-4">
+            <h1 class="text-3xl font-bold">TechKnowledge</h1>
+            <p class="text-blue-200 mt-1">Organizador Inteligente de Contenido Técnico</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+        <!-- Formulario -->
+        <section class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4">Clasificar contenido</h2>
+            <form id="formClasificar" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Título</label>
+                    <input id="inputTitulo" type="text" required maxlength="500"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                           placeholder="Ej: Introducción a Spring Boot" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Texto</label>
+                    <textarea id="inputTexto" rows="4" required maxlength="10000"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Ej: En este contenido se presentan los conceptos básicos..."></textarea>
+                </div>
+                <button type="submit"
+                        class="bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 px-6 rounded-lg transition-colors">
+                    Clasificar
+                </button>
+            </form>
+
+            <!-- Resultado -->
+            <div id="resultado" class="hidden mt-6 p-4 rounded-lg border fade-in"></div>
+        </section>
+
+        <!-- Historial -->
+        <section class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4">Historial</h2>
+
+            <div class="flex gap-2 mb-4">
+                <select id="filtroCategoria" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="">Todas las categorías</option>
+                </select>
+                <button id="btnFiltrar" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Filtrar
+                </button>
+            </div>
+
+            <div id="historial" class="space-y-3">
+                <p class="text-gray-400 text-sm">No hay clasificaciones aún.</p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

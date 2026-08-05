@@ -75,7 +75,7 @@ app.include_router(contenido_router)
 if __name__ == "__main__":
     uvicorn.run(
         "backend.src.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.host,
+        port=settings.port,
         reload=settings.debug,
     )
