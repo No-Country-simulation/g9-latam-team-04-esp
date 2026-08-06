@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     model_path_es: Path = Path("data-science/models/es/model_es.joblib")
     vectorizer_path_es: Path = Path("data-science/models/es/vectorizer_es.joblib")
 
+    # Carpeta donde el endpoint de export puede guardar los datasets de feedback
+    # (para alimentar el reentrenamiento sin copiar/pegar manual).
+    feedback_dir: Path = Path("data-science/data/feedback")
+
     # Oracle Database
     oracle_user: str = "USERNAME_SCHEMA_SGOEJ"
     oracle_password: str = ""
