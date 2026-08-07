@@ -7,8 +7,12 @@ Cada modelo tiene su propio TF-IDF y LogisticRegression.
 
 from __future__ import annotations
 
+import hashlib
+import logging
 import re
 import string
+import threading
+import time
 import unicodedata
 from pathlib import Path
 
@@ -16,6 +20,8 @@ import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+
+logger = logging.getLogger(__name__)
 
 from shared.stop_words import STOP_WORDS_EN, STOP_WORDS_ES
 
@@ -146,6 +152,13 @@ class ClasificadorService:
             vectorizador_path=Path(settings.vectorizer_path_es),
         )
 
+        # Estado de recarga en caliente (hot reload)
+        self._lock = threading.Lock()
+        self._fingerprints: dict[str, str] = {}
+        self._cargado_en_at: float | None = None
+        self._cargado_es_at: float | None = None
+        self._ultima_recarga: dict[str, str] = {}
+
     # ── Propiedades
 
     @property
@@ -195,6 +208,131 @@ class ClasificadorService:
         elif errores:
             for err in errores:
                 print(f"  [WARN] {err}")
+
+        # Registrar el momento de carga inicial (para el health check).
+        if self._en.cargado:
+            self._cargado_en_at = time.time()
+        if self._es.cargado:
+            self._cargado_es_at = time.time()
+
+    # ── Recarga en caliente (hot reload)
+
+    @staticmethod
+    def _fingerprint_metrics(ruta_metrics: Path) -> str | None:
+        """Hash del contenido de ``metrics.json`` para detectar un modelo nuevo.
+
+        ``reentrenar.py`` escribe ``metrics.json`` al final, tras ambos .joblib,
+        así que un cambio de hash es un marcador fiable de "modelo nuevo listo".
+        """
+        try:
+            if not ruta_metrics.exists():
+                return None
+            return hashlib.sha256(ruta_metrics.read_bytes()).hexdigest()
+        except Exception:
+            logger.exception("No se pudo leer el fingerprint de %s", ruta_metrics)
+            return None
+
+    @property
+    def ultima_recarga(self) -> dict[str, str]:
+        """Resultado de la última recarga por idioma (idioma -> estado)."""
+        return dict(self._ultima_recarga)
+
+    @property
+    def cargado_en_at(self) -> float | None:
+        return self._cargado_en_at
+
+    @property
+    def cargado_es_at(self) -> float | None:
+        return self._cargado_es_at
+
+    def recargar(self) -> dict[str, str]:
+        """Recarga en caliente los modelos cuyo fingerprint haya cambiado.
+
+        Por cada idioma (en/es) compara el fingerprint de ``metrics.json``
+        contra el último cargado. Si cambió, construye los objetos nuevos FUERA
+        del lock y los asigna atómicamente. Si la carga falla, conserva el modelo
+        viejo y NO toca ``cargado``.
+
+        Returns
+        -------
+        dict con estado por idioma: ``"unchanged"`` | ``"recargado"`` | ``"error"``.
+        """
+        por_idioma: dict[str, str] = {}
+        idiomas = {
+            "en": self._en,
+            "es": self._es,
+        }
+
+        for idioma, modelo in idiomas.items():
+            ruta_metrics = Path(settings.metrics_dir) / idioma / "metrics.json"
+            fingerprint = self._fingerprint_metrics(ruta_metrics)
+
+            if fingerprint is None:
+                # No hay metrics.json (aún no se reentrenó) -> no hay nada que recargar
+                por_idioma[idioma] = "sin_metrics"
+                continue
+
+            # Coincide con lo ya cargado -> sin cambios
+            if self._fingerprints.get(idioma) == fingerprint:
+                por_idioma[idioma] = "sin_cambios"
+                continue
+
+            # Construir el modelo nuevo FUERA del lock (joblib.load es costoso)
+            try:
+                nuevo = _ModeloIdioma(
+                    modelo_path=modelo._modelo_path,
+                    vectorizador_path=modelo._vectorizador_path,
+                )
+                nuevo.cargar()
+            except Exception:
+                logger.exception("Falló la recarga del modelo '%s' — se conserva el anterior", idioma)
+                por_idioma[idioma] = "error"
+                continue
+
+            # Swap atómico bajo el lock: los lectores ven un par consistente
+            with self._lock:
+                if idioma == "en":
+                    self._en = nuevo
+                    self._cargado_en_at = time.time()
+                else:
+                    self._es = nuevo
+                    self._cargado_es_at = time.time()
+                self._fingerprints[idioma] = fingerprint
+
+            logger.info("Modelo '%s' recargado en caliente", idioma)
+            por_idioma[idioma] = "recargado"
+
+        self._ultima_recarga = por_idioma
+        return por_idioma
+
+    def recargar_ahora(self) -> dict[str, str]:
+        """Recarga forzada (ignora fingerprint): siempre intenta volver a cargar disco."""
+        por_idioma: dict[str, str] = {}
+        idiomas = {
+            "en": self._en,
+            "es": self._es,
+        }
+        for idioma, modelo in idiomas.items():
+            try:
+                nuevo = _ModeloIdioma(
+                    modelo_path=modelo._modelo_path,
+                    vectorizador_path=modelo._vectorizador_path,
+                )
+                nuevo.cargar()
+            except Exception:
+                logger.error("Falló la recarga de '%s' — se conserva el anterior", idioma)
+                por_idioma[idioma] = "error"
+                continue
+            with self._lock:
+                if idioma == "en":
+                    self._en = nuevo
+                    self._cargado_en_at = time.time()
+                else:
+                    self._es = nuevo
+                    self._cargado_es_at = time.time()
+            por_idioma[idioma] = "recargado"
+        self._ultima_recarga = por_idioma
+        return por_idioma
 
     # ── Predicción
 
