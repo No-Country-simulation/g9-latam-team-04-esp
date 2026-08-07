@@ -80,8 +80,16 @@ def _cargar_dataframe(path: Path) -> pd.DataFrame:
 
 
 def _preparar_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Quita nulos y construye el corpus (igual que el notebook)."""
+    """Quita nulos, normaliza categorías y construye el corpus.
+
+    ``categoria`` se normaliza (strip + lower) para alinearla con las etiquetas
+    de la base ``dataset_limpio_*.csv`` (todas en minúsculas). Sin esto, un
+    feedback con mayúsculas ("Backend") crea clases duplicadas ("backend" +
+    "Backend"), y clases con 1 solo ejemplo rompen el split estratificado
+    (``stratify``). ``corpus`` ya se minúscula, como en el notebook.
+    """
     df = df.dropna(subset=["titulo", "texto", "categoria"]).reset_index(drop=True)
+    df["categoria"] = df["categoria"].astype(str).str.strip().str.lower()
     df["corpus"] = (df["titulo"].astype(str) + " " + df["texto"].astype(str)).str.lower()
     return df
 
@@ -233,6 +241,10 @@ def main(argv: list[str] | None = None) -> int:
     idioma = args.idioma
     stop_words = STOP_WORDS_EN if idioma == "en" else STOP_WORDS_ES
 
+    print("=" * 60)
+    print(f"  REENTRENAMIENTO " f"{idioma.upper()}")
+    print("=" * 60)
+
     base_path = DATA_DIR / "processed" / f"dataset_limpio_{idioma}.csv"
     feedback_path = DATA_DIR / "feedback" / f"dataset_feedback_{idioma}.csv"
 
@@ -242,15 +254,21 @@ def main(argv: list[str] | None = None) -> int:
 
     df_base = _cargar_dataframe(base_path)
     df_feedback = _cargar_dataframe(feedback_path) if feedback_path.exists() else pd.DataFrame()
-    print(f"Base:     {len(df_base)} filas ({base_path})")
-    print(f"Feedback: {len(df_feedback)} filas ({feedback_path if feedback_path.exists() else 'no existe'})")
+    print(f"Base:     {len(df_base)} filas ({base_path.name})")
+    print(f"Feedback: {len(df_feedback)} filas ({feedback_path.name if feedback_path.exists() else 'no existe'})")
 
     # ── Umbral 1: ¿hay suficiente feedback?
     if len(df_feedback) < args.min_feedback and not args.force:
+        faltan = args.min_feedback - len(df_feedback)
         print(
-            f"[ABORT] Feedback insuficiente: {len(df_feedback)} < {args.min_feedback}. "
-            "Exportá feedback con GET /contenidos/exportar-dataset?guardar=true o usá --force."
+            f"[ABORT] Feedback insuficiente para entrenar el modelo {idioma.upper()}.\n"
+            f"  - Filas de feedback actuales:    {len(df_feedback)}\n"
+            f"  - Mínimo requerido (--min-feedback): {args.min_feedback}\n"
+            f"  - Faltan {faltan} fila(s) para alcanzar el mínimo.\n"
+            "Exportá más feedback con GET /contenidos/exportar-dataset?guardar=true "
+            f"o usá --force para forzar con lo disponible."
         )
+        print("-" * 60)
         return 2
 
     # ── Datos combinados (base + feedback) y preparación
@@ -287,18 +305,38 @@ def main(argv: list[str] | None = None) -> int:
     if vigentes is not None and not args.force:
         f1_vigente = vigentes.get("f1_macro")
         if f1_vigente is not None and metricas["f1_macro"] < f1_vigente + args.min_f1_improvement:
+            diferencia = metricas["f1_macro"] - f1_vigente
+            if diferencia < 0:
+                veredicto = "el nuevo es PEOR al vigente"
+                regla = "No se sobrescribió nada ni se generó backup (regla: no reemplazar con un modelo peor)."
+            else:
+                veredicto = "el nuevo es MEJOR, pero no alcanza la mejora mínima requerida"
+                regla = "No se generó backup (regla: se exige mejorar al menos la mejora mínima para reemplazar)."
             print(
-                f"[ABORT] F1 no supera al vigente: {metricas['f1_macro']:.4f} "
-                f"< {f1_vigente:.4f} + {args.min_f1_improvement:.4f}. "
-                "No se sobrescribió nada. Usá --force para forzar."
+                f"[ABORT] El modelo {idioma.upper()} no pasó la prueba de métricas: {veredicto}.\n"
+                f"  - F1 macro NUEVO (con feedback):     {metricas['f1_macro']:.4f}\n"
+                f"  - F1 macro VIGENTE (en producción):  {f1_vigente:.4f}\n"
+                f"  - Mejora mínima requerida:          +{args.min_f1_improvement:.4f}\n"
+                f"  - Diferencia:                        {diferencia:.4f}  -> NO se sobrescribe\n"
+                f"{regla}\n"
+                f"Para forzar el reemplazo:  python reentrenar.py {idioma} --force"
             )
+            print("-" * 60)
             return 3
 
     guardar_artefactos(idioma, modelo, vectorizer, metricas)
-    print(f"[OK] Artefactos escritos en {MODELS_DIR / idioma}/")
+    print("-" * 60)
+    print("[OK] Entrenamiento completado y modelos reemplazados.")
+    print(f"     Artefactos escritos en {MODELS_DIR / idioma}/")
+    print("-" * 60)
     print(json.dumps({k: v for k, v in metricas.items() if k != "reporte"}, indent=2, ensure_ascii=False))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as e:  # noqa: BLE001 - último recurso: dar un mensaje claro
+        print(f"[ERROR] No se pudo completar el reentrenamiento: {e}")
+        print("Revisá los datos de entrada (base y feedback) o ejecutá desde una terminal para ver el traceback completo.")
+        sys.exit(1)
