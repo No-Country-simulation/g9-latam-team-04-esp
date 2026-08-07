@@ -25,6 +25,23 @@ class Settings(BaseSettings):
     # (para alimentar el reentrenamiento sin copiar/pegar manual).
     feedback_dir: Path = Path("data-science/data/feedback")
 
+    # Recarga en caliente de modelos
+    # Carpeta base de los modelos (métricas por idioma: data-science/models/{lang}/metrics.json)
+    metrics_dir: Path = Path("data-science/models")
+    # Intervalo en segundos del chequeo automático de recarga (0 = deshabilitado)
+    reload_check_interval_s: int = 86400
+    # Ruta al script de reentrenamiento lanzado por POST /modelos/reentrenar
+    retrain_script_path: Path = Path("data-science/scripts/reentrenar.py")
+
+    # Umbrales de reentrenamiento (usados por reentrenar.py); declarados aquí
+    # para leerlos desde .env (prefijo TK_) sin que fallen por "extra".
+    retrain_min_feedback: int = 50
+    retrain_min_f1_improvement: float = 0.00
+
+    # Token requerido en X-Admin-Token para endpoints de gestión
+    # (POST /modelos/reentrenar). Vacío = gestión deshabilitada.
+    admin_token: str = ""
+
     # Oracle Database
     oracle_user: str = "USERNAME_SCHEMA_SGOEJ"
     oracle_password: str = ""
@@ -41,6 +58,10 @@ class Settings(BaseSettings):
     # Lenguaje por defecto
     default_language: str = "auto"  # "auto" | "en" | "es"
 
-    model_config = {"env_prefix": "TK_", "env_file": ".env"}
+    model_config = {
+        "env_prefix": "TK_",
+        "env_file": ".env",
+        "extra": "ignore",
+    }
 
 settings = Settings()
