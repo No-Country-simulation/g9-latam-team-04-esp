@@ -177,3 +177,10 @@ class HealthResponse(BaseModel):
     version: str = Field(..., examples=["1.0.0"])
     model_loaded: bool
     embeddings: bool
+    # Recarga en caliente (opcionales para mantener compatibilidad con clientes previos)
+    # Los campos *_at son epoch en segundos (para máquinas).
+    model_loaded_en_at: float | None = None
+    model_loaded_es_at: float | None = None
+    ultima_recarga: dict[str, str] = Field(default_factory=dict)
+    retrain_estado: str | None = None
+    retrain_last_exit_code: int | None = None

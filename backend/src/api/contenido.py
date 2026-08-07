@@ -14,14 +14,19 @@ Endpoints de clasificación de contenido técnico.
 ``GET  /contenidos/exportar-dataset``     - Exporta el dataset de entrenamiento (CSV/JSON)
 ``GET  /health``                          - Health check del servicio
 """
+import asyncio
 import csv
+import hmac
 import io
 import json
+import logging
+from datetime import datetime
 from typing import Literal
 
 from fastapi import (
     APIRouter,
     File,
+    Header,
     HTTPException,
     Query,
     Response,
@@ -62,6 +67,7 @@ from ..models.response import (
 )
 from ..services.clasificador import clasificador
 from ..services.embeddings import embeddings_service
+from ..services.reentrenador import reentrenador
 
 router = APIRouter(
     prefix="",
@@ -70,6 +76,8 @@ router = APIRouter(
 
 # Probabilidad mínima para aceptar una clasificación
 UMBRAL_CONFIANZA: float = 0.25
+
+logger = logging.getLogger(__name__)
 
 @router.post(
     "/contenido",
@@ -726,12 +734,97 @@ async def exportar_dataset_endpoint(
 )
 async def health_check():
     """Health check del servicio."""
+
+    def _fmt(epoch: float | None) -> str | None:
+        """Epoch (seg) -> fecha legible local dd/mm/AAAA HH:MM:SS."""
+        if epoch is None:
+            return None
+        return datetime.fromtimestamp(epoch).strftime("%d/%m/%Y %H:%M:%S")
+
     return HealthResponse(
         status="ok",
         version="1.0.0",
         model_loaded=clasificador.cargado,
         embeddings=embeddings_service.cargado,
+        model_loaded_en_at=clasificador.cargado_en_at,
+        model_loaded_es_at=clasificador.cargado_es_at,
+        ultima_recarga=clasificador.ultima_recarga,
+        retrain_estado=reentrenador.estado,
+        retrain_last_exit_code=reentrenador.last_exit_code,
     )
+
+
+def _verificar_admin_token(token: str | None) -> None:
+    """Valida el token administrador para endpoints de gestión."""
+    esperado = settings.admin_token
+    if not esperado:
+        # Sin token configurado, no exponemos el endpoint de gestión.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Endpoints de gestión no habilitados (configurar TK_API_ADMIN_TOKEN).",
+        )
+    if not token or not hmac.compare_digest(token, esperado):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de administrador inválido.",
+        )
+
+
+@router.get(
+    "/modelos/reentrenar/estado",
+    summary="Estado del último reentrenamiento",
+    description=(
+        "Devuelve el estado actual del reentrenador y un resumen LEGIBLE del último "
+        "run: exit code, motivos (abort/ok/error), F1 nuevo vs vigente y veredicto. "
+        "No requiere token (es solo lectura)."
+    ),
+)
+async def estado_reentrenamiento():
+    """Estado actual + resumen del último reentrenamiento (sin logs crudos)."""
+    return reentrenador.resumen
+
+
+@router.post(
+    "/modelos/reentrenar",
+    status_code=status.HTTP_200_OK,
+    summary="Lanzar reentrenamiento",
+    description=(
+        "Ejecuta data-science/scripts/reentrenar.py como subproceso (no bloquea el API). "
+        "Requiere header X-Admin-Token (TK_API_ADMIN_TOKEN). Solo entrena si hay "
+        "feedback NUEVO desde el último reentrenamiento (409 si no hay nada nuevo "
+        "o si ya hay uno en curso)."
+    ),
+)
+async def reentrenar_modelos(admin_token: str = Header(None, alias="X-Admin-Token")):
+    """Lanza un reentrenamiento manual como subproceso.
+
+    Entrena SOLO los idiomas con feedback nuevo (mismo criterio que el bucle
+    automático). El idioma cuyo feedback NO cambió no se toca (no se re-entrena
+    ni se le hace backup). Si no hay ninguna idioma con feedback nuevo, o si ya
+    hay un entrenamiento en curso, responde 409 sin lanzar nada. Esto evita que
+    quien tenga el token dispare reentrenamientos en frío que acumulan backups
+    y consumen CPU sin trabajo real.
+    """
+    _verificar_admin_token(admin_token)
+
+    pendientes = await asyncio.to_thread(reentrenador.idiomas_pendientes)
+    if not pendientes:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No hay feedback nuevo en ningún idioma. Nada que hacer.",
+        )
+
+    lanzado, detalle = await asyncio.to_thread(reentrenador.lanzar, pendientes)
+    if not lanzado:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=detalle,
+        )
+    return {
+        "estado": "lanzado",
+        "idiomas": pendientes,
+        "detalle": "El reentrenamiento corre en segundo plano.",
+    }
 
 # ── Helpers
 
