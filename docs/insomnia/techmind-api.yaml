@@ -1,0 +1,386 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: techmind-api
+meta:
+  id: wrk_cafc59fb7bb24ae892223499684f0fcf
+  created: 1784324973007
+  modified: 1786142860368
+  description: ""
+collection:
+  - url: http://localhost:8000/contenido
+    name: Clasificar Contenido
+    meta:
+      id: req_f1f75f45f98641f995b6818c2345214b
+      created: 1784324979634
+      modified: 1786072782398
+      isPrivate: false
+      description: ""
+      sortKey: -1784324979634
+    method: POST
+    body:
+      mimeType: application/json
+      text: >-
+        {
+        	"titulo": "Solución de rastreo GPS Monitoreo de flotas y vehículos impulsado por IA de Amber Connect",
+        	"texto": "Una inmersión profunda en el uso del servidor MCP de Humanloop para desacoplar la ingeniería rápida de los canales de implementación e implementar verdaderos LLMOps."
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/health
+    name: Health Check
+    meta:
+      id: req_3307f917a7ab43a2b21e5552e6300fdc
+      created: 1784325027514
+      modified: 1786140967284
+      isPrivate: false
+      description: ""
+      sortKey: -1784325027514
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/categorias
+    name: Listar Categorías
+    meta:
+      id: req_e70d5e04255d4eb1b190e00aceec7315
+      created: 1784325078051
+      modified: 1785422806728
+      isPrivate: false
+      description: ""
+      sortKey: -1784325003574
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-json
+    name: Clasificar lote - JSON
+    meta:
+      id: req_4bdebcd5757b48508f2b59639b013e25
+      created: 1784325097590
+      modified: 1786142084711
+      isPrivate: false
+      description: ""
+      sortKey: -1783597056033.5
+    method: POST
+    body:
+      mimeType: application/json
+      text: >
+        {
+          "items": [
+            {
+              "titulo": "Express.js: El marco web estándar para Node.js",
+              "texto": "Si bien Node.js proporciona el entorno de ejecución, construir una aplicación web o una API RESTful desde cero solo con los módulos nativos de Node.js puede ser tedioso y propenso a errores. Aquí es donde entra en juego Express.js. Express.js es un framework web minimalista y flexible para Node.js que proporciona un conjunto robusto de características para construir aplicaciones web y API de manera rápida y eficiente. Se ha convertido en el estándar de facto para el desarrollo de backend con Node.js, siendo el componente 'E' en la popular pila MEAN/MERN/MEVN (MongoDB, Express, Angular/React/Vue, Node.js)."
+            },
+        		{
+              "titulo":"NPM: El ecosistema de módulos más grande del mundo",
+              "texto": "La filosofía de NPM se centra en la modularidad. Un 'paquete' o 'módulo' en NPM es un directorio con uno o varios programas escritos en JavaScript, junto con un archivo package.json que describe el módulo y sus dependencias. Cuando instalas un paquete, NPM se encarga de descargar no solo ese paquete, sino también todas sus dependencias, asegurando que todo lo necesario para que el módulo funcione esté disponible en tu proyecto."
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos
+    name: Listar - buscar Contenidos
+    meta:
+      id: req_c444f21faed94b8799629d6eb711ccd4
+      created: 1784551829810
+      modified: 1786142027748
+      isPrivate: false
+      description: ""
+      sortKey: -1784324991604
+    method: GET
+    parameters:
+      - name: q
+        value: docker
+        description: busca en título, texto y términos clave
+        disabled: true
+      - name: categoria
+        value: backend
+        description: filtra por categoría
+        disabled: true
+      - name: limite
+        value: "10"
+        description: ""
+        disabled: true
+      - name: pagina
+        value: "2"
+        description: ""
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/lote-csv
+    name: Clasificar lote - CSV
+    meta:
+      id: req_63b0712c5ac643ac9e112900cedf998c
+      created: 1785294419506
+      modified: 1786142091409
+      isPrivate: false
+      description: ""
+      sortKey: -1783233094233.25
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: archivo
+          value: ""
+          description: ""
+          disabled: false
+          fileName: C:\Users\jhonny\Downloads\50_registros_jaime.csv
+          type: file
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/31
+    name: Detalle Contenido
+    meta:
+      id: req_1c27b3edc38e40b89d86d49ba3b0a479
+      created: 1785378877386
+      modified: 1785902163583
+      isPrivate: false
+      description: ""
+      sortKey: -1784324997589
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/
+    name: Eliminar Contenido
+    meta:
+      id: req_064fdd1e6b794181bbaf790b891a864b
+      created: 1785381560349
+      modified: 1785901535888
+      isPrivate: false
+      description: ""
+      sortKey: -1784324994596.5
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenido/31
+    name: Modificar contenido
+    meta:
+      id: req_85fcae8073dd4cdfa0014436441d8e56
+      created: 1785383977145
+      modified: 1786142039001
+      isPrivate: false
+      description: ""
+      sortKey: -1783961017833.75
+    method: PUT
+    body:
+      mimeType: application/json
+      text: >-
+        {
+        	"titulo": "Why JavaScript for QA Automation?",
+        	"texto": "JavaScript used to be seen as a frontend-only language. Today, it powers full-stack development with Node.js and dominates the modern testing ecosystem."
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/301/clasificacion
+    name: Feedback - corrige/confirma Categoría
+    meta:
+      id: req_18c18b8035634b74bc830d887a7fc07c
+      created: 1785504850071
+      modified: 1786142074939
+      isPrivate: false
+      description: ""
+      sortKey: -1783779036933.625
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+         "nueva_categoria_id": 3,
+        	"usuario": "Hernan Rio",
+        	"motivo": "Prueba de correccion, test"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/exportar-dataset
+    name: Exportar - dataset Feedback
+    meta:
+      id: req_98e1eb82140c4c00961655d570880d10
+      created: 1785875792513
+      modified: 1786142020989
+      isPrivate: false
+      description: ""
+      sortKey: -1784324985619
+    method: GET
+    parameters:
+      - name: idioma
+        value: es
+        description: Idioma de los contenidos a exportar - "en", "es", "todos"
+        disabled: false
+      - name: solo_verificados
+        value: "true"
+        description: "True: solo contenidos con feedback humano, False: todos, con la
+          categoría vigente"
+        disabled: false
+      - name: formato
+        value: csv
+        description: 'Formato de salida: "csv" (descargable) o "json"'
+        disabled: false
+      - name: guardar
+        value: "true"
+        description: "True: guarda el archivo en la carpeta de feedback, False: solo
+          devuelve resultado, sin tocar disco."
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/contenidos/busqueda-semantica
+    name: Busqueda semantica
+    meta:
+      id: req_bcc11d152913405c870cfe1e429a2dc2
+      created: 1785900431487
+      modified: 1785902605340
+      isPrivate: false
+      description: ""
+      sortKey: -1784142998733.875
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"texto_consulta": "Express, el framework más popular para NodeJS",
+        	"top_n": 5
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/modelos/reentrenar
+    name: Reentrenamiento manual
+    meta:
+      id: req_9a3fae0faede48279e93b6177961d212
+      created: 1786075263162
+      modified: 1786075309617
+      isPrivate: false
+      description: ""
+      sortKey: -1784233989183.9375
+    method: POST
+    headers:
+      - name: X-Admin-Token
+        value: aqui_va_tu_token_de_admin
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/modelos/reentrenar/estado
+    name: Detalle estado Entrenamiento
+    meta:
+      id: req_4c9694d47b9f473ba7d2295f547a66f7
+      created: 1786140867071
+      modified: 1786141814882
+      isPrivate: false
+      description: ""
+      sortKey: -1784324996092.75
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_a6b576800f2e660c5106a481385d4fc3381b865a
+    created: 1784324973018
+    modified: 1784324973018
+environments:
+  name: Base Environment
+  meta:
+    id: env_a6b576800f2e660c5106a481385d4fc3381b865a
+    created: 1784324973012
+    modified: 1784324973012
+    isPrivate: false
