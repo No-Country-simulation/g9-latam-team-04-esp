@@ -1,0 +1,9 @@
+{
+  "accuracy": 0.7633,
+  "f1_macro": 0.7593,
+  "reporte": "                  precision    recall  f1-score   support\n\n         backend       0.67      0.76      0.71       860\n           cloud       0.66      0.72      0.69       597\ndata engineering       0.81      0.74      0.78       877\n    data science       0.83      0.78      0.80      1020\n        database       0.82      0.75      0.79       885\n          devops       0.70      0.75      0.72      1002\n        frontend       0.84      0.82      0.83      1045\n\n        accuracy                           0.76      6286\n       macro avg       0.76      0.76      0.76      6286\n    weighted avg       0.77      0.76      0.76      6286\n",
+  "idioma": "es",
+  "fecha": "2026-08-12T14:45:59.894735+00:00",
+  "filas_base": 31429,
+  "filas_feedback": 0
+}
