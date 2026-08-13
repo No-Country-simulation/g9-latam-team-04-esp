@@ -5,6 +5,8 @@ FastAPI application entry point.
 """
 
 # imports de la biblioteca estándar
+import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -20,18 +22,77 @@ from .api.contenido import router as contenido_router
 from .core.config import settings
 from .core.database import init_db
 from .services.clasificador import clasificador
+from .services.reentrenador import reentrenador
+
+logger = logging.getLogger(__name__)
+
+
+async def _bucle_automatizacion():
+    """Ciclo de vida del modelo: detecta feedback nuevo -> reentrena -> recarga.
+
+    1. Al arrancar, registra la firma del feedback actual (baseline) para no
+       re-entrenar a ciegas.
+    2. En cada intervalo, si hay feedback NUEVO y no hay entrenamiento en
+       curso, lanza ``reentrenar.py`` como subproceso.
+    3. Cuando el subproceso termina, recarga los modelos en caliente.
+    """
+    intervalo = settings.reload_check_interval_s
+    if intervalo <= 0:
+        return
+
+    await asyncio.to_thread(reentrenador._baseline)
+
+    while True:
+        try:
+            # 1) ¿Terminó el subproceso lanzado antes? Si sí, reevalúa el estado
+            #    (exit code + registro de la firma como procesada). Esto DEBE ir
+            #    antes de decidir relanzar, o re-lanzamos el feedback ya entrenado
+            #    en cada ciclo formando una espiral.
+            terminado = await asyncio.to_thread(reentrenador.check_terminado)
+            if terminado and reentrenador.last_exit_code == 0:
+                resultado = await asyncio.to_thread(clasificador.recargar)
+                logger.info("Reentrenamiento OK -> recarga: %s", resultado)
+
+            # 2) ¿Hay idiomas con feedback nuevo SIN entrenar y sin trabajo?
+            pendientes = await asyncio.to_thread(reentrenador.idiomas_pendientes)
+            if pendientes and reentrenador.estado == "idle":
+                lanzado, detalle = await asyncio.to_thread(
+                    reentrenador.lanzar, pendientes
+                )
+                logger.info("Feedback nuevo (%s) -> %s", "+".join(pendientes), detalle)
+        except Exception:
+            logger.exception("Fallo en el bucle de automatización del modelo")
+        await asyncio.sleep(intervalo)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Inicializa BD y carga el modelo al arrancar la aplicación."""
+    """Inicializa BD, carga el modelo y arranca el bucle de automatización."""
     # Inicializar base de datos
     init_db()
     print("  [OK] Base de datos lista")
 
     # Cargar modelos (EN + ES). Cada uno reporta su estado internamente.
     clasificador.cargar()
+
+    # Tarea en segundo plano (si está habilitada)
+    tarea_auto = None
+    if settings.reload_check_interval_s > 0:
+        tarea_auto = asyncio.create_task(_bucle_automatizacion())
+        print(
+            f"  [OK] Automatización de reentrenamiento cada {settings.reload_check_interval_s}s"
+        )
+    else:
+        print("  [WARN] Automatización deshabilitada (RELOAD_CHECK_INTERVAL_S=0)")
+
     yield
+
+    if tarea_auto is not None:
+        tarea_auto.cancel()
+        try:
+            await tarea_auto
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
