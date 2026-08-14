@@ -15,7 +15,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # imports de nuestros módulos (los relativos con .)
 from .api.contenido import router as contenido_router
@@ -118,18 +118,19 @@ app.add_middleware(
 app.include_router(contenido_router)
 
 # ── Frontend
-# FRONTEND_HTML = Path(__file__).resolve().parent.parent.parent / "frontend" / "index.html"
+# Sirve TODA la carpeta frontend/ (index.html + css/js/assets/vendor) desde la
+# raíz. Debe ir DESPUÉS del router para que los endpoints de la API tengan
+# prioridad; /docs y /redoc de FastAPI siguen funcionando (se registran al crear
+# la app, antes de este mount). html=True resuelve "/" a index.html.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
 
-# if FRONTEND_HTML.exists():
-
-#     @app.get("/")
-#     async def index():
-#         return FileResponse(str(FRONTEND_HTML))
-
-#     print("  [OK] Frontend servido en /")
-
-# else:
-#     print(f"  [WARN] Frontend no encontrado en {FRONTEND_HTML}")
+if FRONTEND_DIR.exists():
+    app.mount(
+        "/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend"
+    )
+    print(f"  [OK] Frontend servido en / desde {FRONTEND_DIR}")
+else:
+    print(f"  [WARN] Frontend no encontrado en {FRONTEND_DIR}")
 
 
 # ── Entry point

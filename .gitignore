@@ -37,3 +37,5 @@ data/*.db-wal
 data/*.db-shm
 
 # Docs
+# Herramienta local impeccable (sketches y dirección visual)
+.impeccable/

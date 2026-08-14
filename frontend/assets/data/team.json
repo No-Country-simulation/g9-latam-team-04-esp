@@ -1,0 +1,60 @@
+{
+  "team": [
+    {
+      "name": "Jaime Pradenas",
+      "role": "BI Analyst",
+      "avatar": "assets/avatars/jaime-pradenas.png",
+      "github": "https://github.com/jpraden",
+      "linkedin": "https://www.linkedin.com/in/jaime-esteban-pradenas-pizarro"
+    },
+    {
+      "name": "Alan Arce",
+      "role": "Data Scientist",
+      "avatar": "assets/avatars/alan-arce.png",
+      "github": "https://github.com/AlanSebastianArce",
+      "linkedin": "https://www.linkedin.com/in/alansebastianarce"
+    },
+    {
+      "name": "Liuberth Escalona",
+      "role": "Data Scientist",
+      "avatar": "assets/avatars/liuberth-escalona.png",
+      "github": "https://github.com/Liuberth33",
+      "linkedin": "https://www.linkedin.com/in/liuberth-escalona"
+    },
+    {
+      "name": "Román Martín",
+      "role": "Backend Developer",
+      "avatar": "assets/avatars/roman-martin.jpg",
+      "github": "https://github.com/romannang01",
+      "linkedin": "https://www.linkedin.com/in/román-martín/"
+    },
+    {
+      "name": "Lucas Pavez",
+      "role": "Backend Developer",
+      "avatar": "assets/avatars/lucas-pavez.jpg",
+      "github": "https://github.com/LucasKronos10",
+      "linkedin": "https://www.linkedin.com/in/lucas-pavez/"
+    },
+    {
+      "name": "Jhonny Alvino",
+      "role": "Full Stack Developer",
+      "avatar": "assets/avatars/jhonny-alvino.png",
+      "github": "https://github.com/alvinoDev",
+      "linkedin": "https://www.linkedin.com/in/alvinodev/"
+    },
+    {
+      "name": "Henry Aspeti",
+      "role": "Full Stack Developer",
+      "avatar": "assets/avatars/henry-aspeti.png",
+      "github": "https://github.com/HenBri",
+      "linkedin": "https://www.linkedin.com/in/henryaspeti/"
+    },
+    {
+      "name": "Gabriel Sorrentino",
+      "role": "Architect",
+      "avatar": "assets/avatars/gabriel-sorrentino.png",
+      "github": "https://github.com/GabrielSorrentino",
+      "linkedin": "https://www.linkedin.com/in/gabriel-sorrentino-5466283a1/"
+    }
+  ]
+}
