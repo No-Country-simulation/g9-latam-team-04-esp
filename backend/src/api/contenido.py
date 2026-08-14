@@ -33,6 +33,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from pydantic import ValidationError
 
 from ..core.config import settings
 from ..core.database import (
@@ -40,6 +41,7 @@ from ..core.database import (
     buscar_por_similitud,
     corregir_clasificacion,
     eliminar_contenido,
+    existe_contenido_duplicado,
     exportar_dataset,
     guardar_clasificacion,
     listar_categorias,
@@ -142,13 +144,29 @@ async def clasificar_contenido(body: ContenidoRequest):
                 # no impedimos guardar el contenido.
                 embedding = None
 
-        # Persistir en BD
-        contenido_id = guardar_clasificacion(
+        # Evitar registros duplicados (mismo título + texto ya existente)
+        duplicado = await asyncio.to_thread(
+            existe_contenido_duplicado,
+            body.titulo,
+            body.texto,
+        )
+        if duplicado:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Ya existe un contenido con el mismo título y texto. "
+                    "No se registró el duplicado."
+                ),
+            )
+
+        # Persistir en BD (bloqueante: corre en un hilo para no congelar el event loop)
+        contenido_id = await asyncio.to_thread(
+            guardar_clasificacion,
             titulo=body.titulo,
             texto=body.texto,
             categoria=resultado["categoria"],
             probabilidad=resultado["probabilidad"],
-            terminos_clave=terminos_clave, # list[dict] con palabra + peso
+            terminos_clave=terminos_clave,  # list[dict] con palabra + peso
             idioma=resultado["idioma"],
             embedding=embedding,
         )
@@ -160,6 +178,13 @@ async def clasificar_contenido(body: ContenidoRequest):
 
     except HTTPException:
         raise
+
+    except ValidationError as exc:
+
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=_humanizar_validacion(exc),
+        )
 
     except ValueError as exc:
 
@@ -197,7 +222,8 @@ async def clasificar_lote_json(body: ContenidoBatchRequest):
             for item in body.items
         ]
 
-        resultados = _clasificar_y_persistir(
+        resultados = await asyncio.to_thread(
+            _clasificar_y_persistir,
             items,
             body.items,
         )
@@ -316,7 +342,7 @@ async def clasificar_lote_csv(
             for item in items_validados
         ]
 
-        resultados = _clasificar_y_persistir(items_dict, items_validados)
+        resultados = await asyncio.to_thread(_clasificar_y_persistir, items_dict, items_validados)
 
         # Mapear la salida idéntica al endpoint JSON
         items_respuesta = [
@@ -346,6 +372,11 @@ async def clasificar_lote_csv(
             total_fallidos=len(items_respuesta) - exitosos,
         )
     
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=_humanizar_validacion(exc),
+        )
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -384,7 +415,8 @@ async def listar_contenidos_endpoint(
     limite: int = Query(20, ge=1, le=100, description="Resultados por página"),
 ):
     """Lista o busca contenidos con filtros opcionales."""
-    items, total = listar_contenidos(
+    items, total = await asyncio.to_thread(
+        listar_contenidos,
         q=q,
         categoria=categoria,
         pagina=pagina,
@@ -425,20 +457,14 @@ async def busqueda_semantica_endpoint(
             detail="El modelo de embeddings no está disponible.",
         )
 
-    if body.top_n <= 0:
-
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="top_n debe ser mayor que cero.",
-        )
-
     try:
 
         embedding = embeddings_service.generar(
             body.texto_consulta
         )
 
-        resultados = buscar_por_similitud(
+        resultados = await asyncio.to_thread(
+            buscar_por_similitud,
             embedding=embedding,
             top_n=body.top_n,
             categoria=body.categoria,
@@ -472,7 +498,7 @@ async def busqueda_semantica_endpoint(
 async def obtener_contenido(contenido_id: int):
 
     """Obtiene un contenido por su ID."""
-    contenido = obtener_contenido_por_id(contenido_id)
+    contenido = await asyncio.to_thread(obtener_contenido_por_id, contenido_id)
 
     if contenido is None:
         raise HTTPException(
@@ -492,13 +518,13 @@ async def eliminar_contenido_endpoint(
     contenido_id: int,
 ):
 
-    eliminado = eliminar_contenido(contenido_id)
+    eliminado = await asyncio.to_thread(eliminar_contenido, contenido_id)
     if not eliminado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No se encontró contenido con id {id}",
+            detail=f"No se encontró contenido con id {contenido_id}",
         )
-    return {"mensaje": f"Contenido {id} eliminado correctamente"}
+    return {"mensaje": f"Contenido {contenido_id} eliminado correctamente"}
 
 @router.put(
     "/contenido/{contenido_id}",
@@ -518,7 +544,7 @@ async def actualizar_contenido(
 
     _verificar_modelo()
 
-    contenido = obtener_contenido_por_id(contenido_id)
+    contenido = await asyncio.to_thread(obtener_contenido_por_id, contenido_id)
 
     if contenido is None:
         raise HTTPException(
@@ -552,23 +578,33 @@ async def actualizar_contenido(
                 ),
             )
 
+        # Generación del embedding protegida (consistente con POST):
+        # si falla el modelo de embeddings, actualizamos sin él.
         embedding = None
 
         if embeddings_service.cargado:
-            embedding = embeddings_service.generar(
-                f"{body.titulo}\n{body.texto}"
-            )
 
-        actualizar_contenido_db(
-        contenido_id=contenido_id,
-        titulo=body.titulo,
-        texto=body.texto,
-        idioma=resultado["idioma"],
-        categoria=resultado["categoria"],
-        probabilidad=resultado["probabilidad"],
-        terminos_clave=terminos,
-        embedding=embedding,
-    )
+            try:
+
+                embedding = embeddings_service.generar(
+                    f"{body.titulo}\n{body.texto}"
+                )
+
+            except Exception:
+
+                embedding = None
+
+        await asyncio.to_thread(
+            actualizar_contenido_db,
+            contenido_id=contenido_id,
+            titulo=body.titulo,
+            texto=body.texto,
+            idioma=resultado["idioma"],
+            categoria=resultado["categoria"],
+            probabilidad=resultado["probabilidad"],
+            terminos_clave=terminos,
+            embedding=embedding,
+        )
 
         return ContenidoDetalleResponse(
             id=contenido_id,
@@ -602,7 +638,8 @@ async def actualizar_contenido(
 )
 async def listar_categorias_endpoint():
     """Lista las categorías disponibles."""
-    return CategoriasResponse(categorias=listar_categorias())
+    categorias = await asyncio.to_thread(listar_categorias)
+    return CategoriasResponse(categorias=categorias)
 
 @router.patch(
     "/contenidos/{contenido_id}/clasificacion",
@@ -618,7 +655,8 @@ async def corregir_clasificacion_endpoint(
 ):
     """Corrige o confirma manualmente la clasificación de un contenido."""
     try:
-        resultado = corregir_clasificacion(
+        resultado = await asyncio.to_thread(
+            corregir_clasificacion,
             contenido_id=contenido_id,
             nueva_categoria_id=body.nueva_categoria_id,
             usuario=body.usuario,
@@ -678,7 +716,11 @@ async def exportar_dataset_endpoint(
     mismo nombre que el endpoint de descarga (ej. ``dataset_feedback_es.csv``),
     listo para que el reentrenamiento lo lea sin copiar/pegar manual.
     """
-    filas = exportar_dataset(idioma=idioma, solo_verificados=solo_verificados)
+    filas = await asyncio.to_thread(
+        exportar_dataset,
+        idioma=idioma,
+        solo_verificados=solo_verificados,
+    )
 
     sufijo = "" if idioma == "todos" else f"_{idioma}"
     prefijo = "feedback" if solo_verificados else "contenidos"
@@ -761,7 +803,7 @@ def _verificar_admin_token(token: str | None) -> None:
         # Sin token configurado, no exponemos el endpoint de gestión.
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Endpoints de gestión no habilitados (configurar TK_API_ADMIN_TOKEN).",
+            detail="Endpoints de gestión no habilitados (configurar TK_ADMIN_TOKEN).",
         )
     if not token or not hmac.compare_digest(token, esperado):
         raise HTTPException(
@@ -894,6 +936,13 @@ def _clasificar_y_persistir(
                     f"(probabilidad: {probabilidad:.4f}, mínimo requerido: {UMBRAL_CONFIANZA})"
                 )
 
+            # Evitar registros duplicados dentro del lote (mismo título + texto)
+            if existe_contenido_duplicado(modelo.titulo, modelo.texto):
+                raise ValueError(
+                    "Ya existe un contenido con el mismo título y texto. "
+                    "No se registró el duplicado."
+                )
+
             # Extraer terminos_clave antes de pasar a ContenidoResponse
             terminos = resultado.pop(
                 "terminos_clave",
@@ -918,6 +967,8 @@ def _clasificar_y_persistir(
                     "exito": True,
                     "data": {
                         "id": contenido_id,
+                        "titulo": modelo.titulo,
+                        "texto": modelo.texto,
                         **resultado,
                     },
                     "error": None,
@@ -946,3 +997,20 @@ def _verificar_modelo():
             detail="El modelo de clasificación no está cargado. "
             "Intentá de nuevo en unos segundos.",
         )
+
+
+def _humanizar_validacion(exc: ValidationError) -> str:
+    """Convierte un ValidationError de Pydantic en un mensaje legible.
+
+    Sin esto, el string crudo de Pydantic (``1 validation error for
+    ContenidoRequest ...``) se filtraba directo al cliente. Acá se resume
+    campo por campo para que el consumidor sepa qué corregir.
+    """
+    errores = []
+
+    for e in exc.errors():
+        campo = ".".join(str(parte) for parte in e.get("loc", []))
+        mensaje = e.get("msg", "valor inválido").replace("Value error, ", "")
+        errores.append(f"{campo}: {mensaje}")
+
+    return "Datos inválidos: " + "; ".join(errores)
