@@ -265,6 +265,11 @@ def existe_contenido_duplicado(titulo: str, texto: str) -> bool:
     validador ya normaliza (NFC + strip) antes de llegar acá. El objetivo es
     evitar registros duplicados como los reportados en el testing (el mismo
     título+texto se registró dos veces con IDs distintos).
+
+    Nota Oracle: la columna ``texto`` es CLOB y no se puede usar como clave de
+    comparación con ``=`` (ORA-22848). Se compara con ``DBMS_LOB.COMPARE``,
+    que devuelve 0 cuando ambos CLOB son idénticos. El ``titulo`` sí es
+    VARCHAR2 y se filtra con ``=`` antes para acotar el escaneo.
     """
     with get_connection() as conn:
         with conn.cursor() as cursor:
@@ -273,7 +278,7 @@ def existe_contenido_duplicado(titulo: str, texto: str) -> bool:
                 SELECT COUNT(*)
                 FROM contenidos
                 WHERE UPPER(TRIM(titulo)) = UPPER(TRIM(:titulo))
-                  AND UPPER(TRIM(texto)) = UPPER(TRIM(:texto))
+                  AND DBMS_LOB.COMPARE(texto, TO_CLOB(:texto)) = 0
                 """,
                 {"titulo": titulo, "texto": texto},
             )
