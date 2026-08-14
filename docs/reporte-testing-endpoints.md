@@ -1,4 +1,4 @@
-# Reporte de Testing Exploratorio — TechKnowledge API
+# Reporte de Testing Exploratorio — TechMind 🧠 API
 
 Sesión de pruebas manuales sobre `develop` (backend levantado en local, Oracle real vía wallet,
 Insomnia con la colección `docs/insomnia/techmind-api.yaml`). Objetivo: encontrar bugs mandando
