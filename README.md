@@ -398,21 +398,100 @@ curl -X POST "http://localhost:8000/v1/contenido" \\
 ### 1\. Instalar dependencias
 
 ```bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
-### 2\. Ejecutar la API
+### 2\. Configurar variables de entorno
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cp .env.example .env
+# Completar credenciales Oracle (TK_ORACLE_*) y opcionales de OCI
 ```
 
-FastAPI puede utilizarse para construir una API de predicción ligera y exponer documentación OpenAPI automáticamente, lo que resulta útil para la demo del hackathon.
+### 3\. Ejecutar la API (sirve también el frontend)
 
-### 3\. Probar documentación automática
+```bash
+uvicorn backend.src.main:app --reload --host 0.0.0.0 --port 8000
+```
 
+La API y el frontend corren en el **mismo origen**:
+
+* Frontend (app TechMind): `http://localhost:8000/`
 * Swagger UI: `http://localhost:8000/docs`
 * ReDoc: `http://localhost:8000/redoc`
+
+### 4\. (Alternativa) Frontend standalone para desarrollo
+
+Si preferís iterar el frontend sin recargar el backend:
+
+```bash
+# Terminal 1 — backend (puerto 8000)
+uvicorn backend.src.main:app --reload --port 8000
+
+# Terminal 2 — frontend estático (puerto 8080)
+cd frontend && py -m http.server 8080
+```
+
+En este modo el frontend llama a la API desde otro origen; antes de cargar
+`index.html` seteá la base URL (o usa el default relativo y serví todo desde
+FastAPI):
+
+```html
+<script>window.TECHMIND_API_BASE = "http://localhost:8000";</script>
+```
+
+## Deploy en OCI (Compute + Docker)
+
+La app está dockerizada como **una sola imagen** (API + frontend estático)
+lista para Oracle Cloud Infrastructure. La BD se mantiene en Oracle Database
+(FreeSQL.com o Autonomous Database), así que la VM solo necesita salida HTTPS
+hacia el DSN configurado en `.env`.
+
+### 1\. Preparar la imagen localmente (opcional, para validar)
+
+```bash
+docker build -t techmind:latest .
+docker run --rm --env-file .env -p 8000:8000 techmind:latest
+# Abrir http://localhost:8000 — debe verse la app TechMind completa
+```
+
+### 2\. Crear la VM en OCI
+
+1. **Compute → Instances → Create instance** (shape VM.Standard.E2.1.Micro o
+   mayor; Ubuntu 22.04/24.04 o compatible con Docker).
+2. En **Add SSH keys** subí tu clave pública.
+3. En la **security list** de la VCN/subnet, abrí el puerto **8000** (ingress
+   TCP 8000/8000, source `0.0.0.0/0`).
+4. `docker` y `docker compose` vienen en la imagen de Ubuntu de OCI (o instalalos
+   con `apt install docker.io docker-compose-v2`).
+
+### 3\. Desplegar
+
+```bash
+ssh ubuntu@<IP-PUBLICA>
+git clone https://github.com/No-Country-simulation/g9-latam-team-04-esp.git
+cd g9-latam-team-04-esp
+cp .env.example .env
+nano .env          # completar TK_ORACLE_* (y TK_ADMIN_TOKEN si querés reentrenar)
+docker compose up -d --build
+```
+
+La app queda en `http://<IP-PUBLICA>:8000/`.
+
+### 4\. Actualizaciones
+
+```bash
+git pull
+docker compose up -d --build   # reconstruye y reinicia con los cambios
+```
+
+### 5\. Notas del deploy
+
+* El frontend usa **mismo origen** (rutas relativas), así que no hay CORS en
+  producción; `TK_CORS_ORIGINS` solo importa si servís el frontend aparte.
+* Los modelos `.joblib` van dentro de la imagen; el reentrenamiento los
+  reemplaza en caliente dentro del contenedor.
+* El volumen `techmind_data` persiste el feedback exportado entre reinicios.
 
 ## Integración con OCI
 
