@@ -115,6 +115,14 @@
         headers: { "X-Admin-Token": token },
       }),
 
+    // Métricas (telemetría real en memoria)
+    metricas: () => request("/metrics"),
+    limpiarMetricas: (token) =>
+      request("/metrics", {
+        method: "DELETE",
+        headers: { "X-Admin-Token": token },
+      }),
+
     // Export de dataset (GET /contenidos/exportar-dataset)
     // params: { idioma, solo_verificados, formato, guardar }
     exportarDatasetUrl: (params = {}) => {
