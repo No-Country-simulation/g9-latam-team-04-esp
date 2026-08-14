@@ -1,0 +1,25 @@
+# TechMind — deploy en OCI Compute (VM) con Docker Compose.
+#
+# Uso en la VM:
+#   1. git clone del repo
+#   2. cp .env.example .env   (y completar credenciales Oracle/OCI)
+#   3. docker compose up -d --build
+#
+# Todo corre en un solo contenedor: API + frontend en el puerto 8000.
+services:
+  techmind:
+    build: .
+    image: techmind:latest
+    container_name: techmind
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # Persistencia: feedback exportado por la API. NO montar volumes sobre
+    # data-science/models/ — ocultaría los modelos joblib incluidos en la imagen.
+    volumes:
+      - techmind_data:/app/data-science/data/feedback
+
+volumes:
+  techmind_data:
