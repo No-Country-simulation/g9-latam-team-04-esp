@@ -1,5 +1,5 @@
 """
-TechKnowledge API - Organizador Inteligente de Conocimiento Técnico.
+TechMind 🧠 API - Organizador Inteligente de Conocimiento Técnico.
 
 FastAPI application entry point.
 """

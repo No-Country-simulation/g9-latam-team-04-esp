@@ -1,4 +1,4 @@
-# Cómo clasifica el modelo — TechKnowledge API
+# Cómo clasifica el modelo — TechMind 🧠 API
 
 Este documento explica, para quien no conoce mucho la parte de Data Science, cómo el
 modelo decide a qué categoría pertenece un contenido técnico, qué información

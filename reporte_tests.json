@@ -1,0 +1,409 @@
+{
+    "created": 1785946075.2019525,
+    "duration": 3.613650321960449,
+    "exitcode": 0,
+    "root": "C:\\Users\\sinof\\g9-latam-team-04-esp",
+    "environment": {},
+    "summary": {
+        "passed": 11,
+        "total": 11,
+        "collected": 11
+    },
+    "collectors": [
+        {
+            "nodeid": "",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "tests",
+                    "type": "Dir"
+                }
+            ]
+        },
+        {
+            "nodeid": "tests/test_modelo.py",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "tests/test_modelo.py::test_modelo_en_carga_sin_errores",
+                    "type": "Function",
+                    "lineno": 34
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_modelo_es_carga_sin_errores",
+                    "type": "Function",
+                    "lineno": 41
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_categorias_no_vacias",
+                    "type": "Function",
+                    "lineno": 48
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_prediccion_estructura_esperada[en-How to deploy a Docker container-Step by step guide to deploying containers with docker compose.]",
+                    "type": "Function",
+                    "lineno": 54
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_prediccion_estructura_esperada[es-Como desplegar un contenedor Docker-Guia paso a paso para desplegar contenedores con docker compose.]",
+                    "type": "Function",
+                    "lineno": 54
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_todas_las_categorias_predicen_sin_error[en]",
+                    "type": "Function",
+                    "lineno": 90
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_todas_las_categorias_predicen_sin_error[es]",
+                    "type": "Function",
+                    "lineno": 90
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_texto_vacio_no_rompe[en]",
+                    "type": "Function",
+                    "lineno": 107
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_texto_vacio_no_rompe[es]",
+                    "type": "Function",
+                    "lineno": 107
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_solo_espacios_no_rompe[en]",
+                    "type": "Function",
+                    "lineno": 115
+                },
+                {
+                    "nodeid": "tests/test_modelo.py::test_solo_espacios_no_rompe[es]",
+                    "type": "Function",
+                    "lineno": 115
+                }
+            ]
+        },
+        {
+            "nodeid": "tests",
+            "outcome": "passed",
+            "result": [
+                {
+                    "nodeid": "tests/test_modelo.py",
+                    "type": "Module"
+                }
+            ]
+        }
+    ],
+    "tests": [
+        {
+            "nodeid": "tests/test_modelo.py::test_modelo_en_carga_sin_errores",
+            "lineno": 34,
+            "outcome": "passed",
+            "keywords": [
+                "test_modelo_en_carga_sin_errores",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.084745500003919,
+                "outcome": "passed",
+                "stdout": "  [OK] Modelo EN cargado: 7 categorias\n  [OK] Modelo ES cargado: 7 categorias\n"
+            },
+            "call": {
+                "duration": 0.00021249998826533556,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00021349999587982893,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_modelo_es_carga_sin_errores",
+            "lineno": 41,
+            "outcome": "passed",
+            "keywords": [
+                "test_modelo_es_carga_sin_errores",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00020900001982226968,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.0001626000157557428,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00022170000011101365,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_categorias_no_vacias",
+            "lineno": 48,
+            "outcome": "passed",
+            "keywords": [
+                "test_categorias_no_vacias",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00014429999282583594,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.00013810000382363796,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00013979995856061578,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_prediccion_estructura_esperada[en-How to deploy a Docker container-Step by step guide to deploying containers with docker compose.]",
+            "lineno": 54,
+            "outcome": "passed",
+            "keywords": [
+                "test_prediccion_estructura_esperada[en-How to deploy a Docker container-Step by step guide to deploying containers with docker compose.]",
+                "parametrize",
+                "pytestmark",
+                "en-How to deploy a Docker container-Step by step guide to deploying containers with docker compose.",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0002462000120431185,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.027653499972075224,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.000348400033544749,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_prediccion_estructura_esperada[es-Como desplegar un contenedor Docker-Guia paso a paso para desplegar contenedores con docker compose.]",
+            "lineno": 54,
+            "outcome": "passed",
+            "keywords": [
+                "test_prediccion_estructura_esperada[es-Como desplegar un contenedor Docker-Guia paso a paso para desplegar contenedores con docker compose.]",
+                "parametrize",
+                "pytestmark",
+                "es-Como desplegar un contenedor Docker-Guia paso a paso para desplegar contenedores con docker compose.",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00026489997981116176,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.004171400039922446,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0002929999609477818,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_todas_las_categorias_predicen_sin_error[en]",
+            "lineno": 90,
+            "outcome": "passed",
+            "keywords": [
+                "test_todas_las_categorias_predicen_sin_error[en]",
+                "parametrize",
+                "pytestmark",
+                "en",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0003225000109523535,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.1841575000435114,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0003040999872609973,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_todas_las_categorias_predicen_sin_error[es]",
+            "lineno": 90,
+            "outcome": "passed",
+            "keywords": [
+                "test_todas_las_categorias_predicen_sin_error[es]",
+                "parametrize",
+                "pytestmark",
+                "es",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.0002046999870799482,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.1816090999636799,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0002294000005349517,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_texto_vacio_no_rompe[en]",
+            "lineno": 107,
+            "outcome": "passed",
+            "keywords": [
+                "test_texto_vacio_no_rompe[en]",
+                "parametrize",
+                "pytestmark",
+                "en",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00020700000459328294,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.024916500027757138,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00038789998507127166,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_texto_vacio_no_rompe[es]",
+            "lineno": 107,
+            "outcome": "passed",
+            "keywords": [
+                "test_texto_vacio_no_rompe[es]",
+                "parametrize",
+                "pytestmark",
+                "es",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00022339995484799147,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03188429999863729,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0002190999803133309,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_solo_espacios_no_rompe[en]",
+            "lineno": 115,
+            "outcome": "passed",
+            "keywords": [
+                "test_solo_espacios_no_rompe[en]",
+                "parametrize",
+                "pytestmark",
+                "en",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00020710000535473228,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.025273500010371208,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.00034579995553940535,
+                "outcome": "passed"
+            }
+        },
+        {
+            "nodeid": "tests/test_modelo.py::test_solo_espacios_no_rompe[es]",
+            "lineno": 115,
+            "outcome": "passed",
+            "keywords": [
+                "test_solo_espacios_no_rompe[es]",
+                "parametrize",
+                "pytestmark",
+                "es",
+                "test_modelo.py",
+                "tests",
+                "g9-latam-team-04-esp",
+                ""
+            ],
+            "setup": {
+                "duration": 0.00029850000282749534,
+                "outcome": "passed"
+            },
+            "call": {
+                "duration": 0.03085580002516508,
+                "outcome": "passed"
+            },
+            "teardown": {
+                "duration": 0.0003141000051982701,
+                "outcome": "passed"
+            }
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Trying to unpickle estimator LogisticRegression from version 1.6.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+            "category": "InconsistentVersionWarning",
+            "when": "runtest",
+            "filename": "C:\\Users\\sinof\\AppData\\Roaming\\Python\\Python311\\site-packages\\sklearn\\base.py",
+            "lineno": 525
+        },
+        {
+            "message": "Trying to unpickle estimator TfidfTransformer from version 1.6.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+            "category": "InconsistentVersionWarning",
+            "when": "runtest",
+            "filename": "C:\\Users\\sinof\\AppData\\Roaming\\Python\\Python311\\site-packages\\sklearn\\base.py",
+            "lineno": 525
+        },
+        {
+            "message": "Trying to unpickle estimator TfidfVectorizer from version 1.6.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+            "category": "InconsistentVersionWarning",
+            "when": "runtest",
+            "filename": "C:\\Users\\sinof\\AppData\\Roaming\\Python\\Python311\\site-packages\\sklearn\\base.py",
+            "lineno": 525
+        }
+    ]
+}

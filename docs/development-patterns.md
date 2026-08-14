@@ -1,6 +1,6 @@
-# Development Patterns — TechKnowledge API
+# Development Patterns — TechMind 🧠 API
 
-Este documento define los estándares de Git, GitHub y procesos de entrega adoptados en el proyecto **TechKnowledge API**. El objetivo es mantener el repositorio limpio, organizado, productivo y con un historial de cambios trazable.
+Este documento define los estándares de Git, GitHub y procesos de entrega adoptados en el proyecto **TechMind 🧠 API**. El objetivo es mantener el repositorio limpio, organizado, productivo y con un historial de cambios trazable.
 
 ---
 
