@@ -383,7 +383,7 @@
 
     el.innerHTML = [
       kpiCard(t("metricas.telePeticiones"), String(total).replace(/\B(?=(\d{3})+(?!\d))/g, "."), "volt", t("metricas.teleAcumulado")),
-      kpiCard(t("metricas.teleLatenciaP95"), `${p95v.toFixed(1)} ms`, p95v <= 200 ? "ok" : "err", `${t("metricas.teleObjetivo")} ≤ 200 ms`),
+      kpiCard(t("metricas.teleLatenciaP95"), `${p95v.toFixed(1)} ms`, "volt", t("metricas.teleP95Nota")),
       kpiCard(t("metricas.teleTasaExito"), `${tasaExito.toFixed(1)}%`, tasaExito >= 99 ? "ok" : "warn", `${t("metricas.teleSla")} ≥ 99%`),
       kpiCard(t("metricas.teleEndpoints"), String(endpoints), "volt", t("metricas.teleEndpointsNota")),
     ].join("");
@@ -442,16 +442,6 @@
         tension: 0.3,
         spanGaps: true,
       }));
-      // Umbral SLA 200ms
-      datasets.push({
-        label: t("metricas.teleSlaUmbral"),
-        data: Array(last.length).fill(200),
-        borderColor: colors.err,
-        borderDash: [5, 4],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-      });
 
       const existing = charts.find((c) => c.canvas === lineEl);
       if (existing) existing.destroy();
