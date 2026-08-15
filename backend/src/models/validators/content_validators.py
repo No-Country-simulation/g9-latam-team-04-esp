@@ -12,7 +12,14 @@ PATRON_SEPARADOR_REPETIDO = re.compile(r"([-_])\1")
 
 
 def normalizar_texto(v: str) -> str:
-    """Normaliza Unicode (NFC) y quita espacios sobrantes. Usar en mode='before'."""
+    """Normaliza Unicode (NFC) y quita espacios sobrantes. Usar en mode='before'.
+
+    Valida el tipo ANTES de normalizar: Pydantic v2 convierte a 422 solo los
+    ``ValueError`` lanzados dentro de un validador; un ``TypeError`` (ej. si el
+    cliente manda un ``int`` o ``bool``) se le escapa y termina en 500.
+    """
+    if not isinstance(v, str):
+        raise ValueError("debe ser una cadena de texto")
     v = unicodedata.normalize("NFC", v)
     return v.strip()
 

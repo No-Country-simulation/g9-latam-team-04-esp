@@ -257,6 +257,33 @@ def guardar_clasificacion(
         conn.commit()
         return contenido_id
 
+
+def existe_contenido_duplicado(titulo: str, texto: str) -> bool:
+    """Indica si ya existe un contenido con el mismo título y texto.
+
+    Compara sin distinguir mayúsculas/minúsculas ni espacios extra, porque el
+    validador ya normaliza (NFC + strip) antes de llegar acá. El objetivo es
+    evitar registros duplicados como los reportados en el testing (el mismo
+    título+texto se registró dos veces con IDs distintos).
+
+    Nota Oracle: la columna ``texto`` es CLOB y no se puede usar como clave de
+    comparación con ``=`` (ORA-22848). Se compara con ``DBMS_LOB.COMPARE``,
+    que devuelve 0 cuando ambos CLOB son idénticos. El ``titulo`` sí es
+    VARCHAR2 y se filtra con ``=`` antes para acotar el escaneo.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*)
+                FROM contenidos
+                WHERE UPPER(TRIM(titulo)) = UPPER(TRIM(:titulo))
+                  AND DBMS_LOB.COMPARE(texto, TO_CLOB(:texto)) = 0
+                """,
+                {"titulo": titulo, "texto": texto},
+            )
+            return cursor.fetchone()[0] > 0
+
 def listar_contenidos(
     limite: int = 20,
     pagina: int = 1,
