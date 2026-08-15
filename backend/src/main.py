@@ -8,6 +8,7 @@ FastAPI application entry point.
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,8 +20,10 @@ from fastapi.staticfiles import StaticFiles
 
 # imports de nuestros módulos (los relativos con .)
 from .api.contenido import router as contenido_router
+from .api.metricas import router as metricas_router
 from .core.config import settings
 from .core.database import init_db
+from .core.telemetria import telemetria
 from .services.clasificador import clasificador
 from .services.reentrenador import reentrenador
 
@@ -114,8 +117,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def telemetria_middleware(request, call_next):
+    """Registra método, ruta, status y latencia de cada request en memoria.
+
+    Alimenta ``GET /metrics``. Se excluye el propio ``/metrics`` para que las
+    consultas del panel no contaminen las métricas que muestra.
+    """
+    inicio = time.perf_counter()
+    response = await call_next(request)
+    latencia_ms = (time.perf_counter() - inicio) * 1000
+
+    ruta = request.url.path
+    if not ruta.startswith("/metrics"):
+        telemetria.registrar(
+            method=request.method,
+            endpoint=ruta,
+            http_status=response.status_code,
+            latencia_ms=latencia_ms,
+        )
+    return response
+
+
 # ── Routers (primero, para que tengan prioridad)
 app.include_router(contenido_router)
+app.include_router(metricas_router)
 
 # ── Frontend
 # Sirve TODA la carpeta frontend/ (index.html + css/js/assets/vendor) desde la
