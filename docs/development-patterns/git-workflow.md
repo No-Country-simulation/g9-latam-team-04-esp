@@ -1,6 +1,6 @@
 # Git Workflow
 
-Este documento describe el flujo de trabajo Git adoptado en el proyecto **TechKnowledge API**, detallando las ramas utilizadas, la creación de ramas de funcionalidad, el flujo de hotfixes y las rutinas recomendadas para mantener el repositorio limpio.
+Este documento describe el flujo de trabajo Git adoptado en el proyecto **TechMind API**, detallando las ramas utilizadas, la creación de ramas de funcionalidad, el flujo de hotfixes y las rutinas recomendadas para mantener el repositorio limpio.
 
 ---
 

@@ -1,4 +1,4 @@
-# 🚀 Guía Rápida de Git para el Equipo — TechKnowledge API
+# 🚀 Guía Rápida de Git para el Equipo — TechMind API
 
 Si nunca usaste Git o lo usaste poco, esta guía es para vos. Explica desde cero cómo trabajar en equipo sin pisarnos.
 
