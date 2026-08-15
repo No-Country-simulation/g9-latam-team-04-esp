@@ -1,6 +1,6 @@
 # Using Issues
 
-En el proyecto **TechKnowledge API**, la organización y la trazabilidad del trabajo comienzan con la creación y el mantenimiento de **GitHub Issues**. Todo cambio en el código debe estar asociado a una Issue abierta y documentada.
+En el proyecto **TechMind API**, la organización y la trazabilidad del trabajo comienzan con la creación y el mantenimiento de **GitHub Issues**. Todo cambio en el código debe estar asociado a una Issue abierta y documentada.
 
 ---
 
