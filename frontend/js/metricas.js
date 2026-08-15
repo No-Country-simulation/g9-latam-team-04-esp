@@ -372,11 +372,6 @@
     if (window.Chart) buildTeleCharts();
   }
 
-  function endpointLabel(ep) {
-    // "POST /contenido" -> "/contenido" para el gráfico (el método ya está en el donut label)
-    return ep.endpoint || ep;
-  }
-
   function renderTelemetriaKpis() {
     const el = $("#tele-kpis");
     if (!el) return;

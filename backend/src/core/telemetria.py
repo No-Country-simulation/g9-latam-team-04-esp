@@ -19,6 +19,48 @@ MAX_EVENTOS = 500
 MAX_SERIE = 60
 MAX_LOGS = 10
 
+# ── Endpoints de negocio que interesan para la telemetría ────────────────────
+# Solo se registran estos. Todo lo demás (estáticos, /vendor/*.js.map, /css,
+# /docs, favicon, etc.) se ignora: solo ensucia las métricas con ruido.
+# ``{id}`` matchea cualquier número (IDs de contenido).
+RUTAS_CLAVE: list[tuple[str, str]] = [
+    ("POST", "/contenido"),
+    ("POST", "/contenido/lote-json"),
+    ("POST", "/contenido/lote-csv"),
+    ("GET", "/contenidos"),
+    ("GET", "/contenido/{id}"),
+    ("PUT", "/contenido/{id}"),
+    ("DELETE", "/contenido/{id}"),
+    ("POST", "/contenidos/busqueda-semantica"),
+]
+
+
+def _ruta_canonica(method: str, path: str) -> str | None:
+    """Devuelve la ruta canónica si ``path`` es un endpoint clave, o None.
+
+    Convierte ``/contenido/701`` en ``/contenido/{id}`` para que todos los
+    contenidos se agreguen bajo la misma entrada (método + ruta).
+    """
+    for m, ruta in RUTAS_CLAVE:
+        if m != method:
+            continue
+        seg_ruta = ruta.split("/")
+        seg_path = path.split("/")
+        if len(seg_ruta) != len(seg_path):
+            continue
+        coincide = True
+        for parte_ruta, parte_path in zip(seg_ruta, seg_path):
+            if parte_ruta == "{id}":
+                if not parte_path.isdigit():
+                    coincide = False
+                    break
+            elif parte_ruta != parte_path:
+                coincide = False
+                break
+        if coincide:
+            return ruta
+    return None
+
 
 @dataclass
 class Telemetria:
@@ -34,14 +76,22 @@ class Telemetria:
         http_status: int,
         latencia_ms: float,
     ) -> None:
-        """Registra un request HTTP completado."""
+        """Registra un request HTTP completado, si es un endpoint clave.
+
+        Los requests a estáticos o a rutas fuera de ``RUTAS_CLAVE`` se
+        descartan en el origen para que el panel muestre solo la API de
+        negocio.
+        """
+        ruta = _ruta_canonica(method, endpoint)
+        if ruta is None:
+            return
         with self._lock:
             self.eventos.append(
                 {
                     "request_id": f"req_{uuid.uuid4().hex[:8]}",
                     "timestamp": int(time.time() * 1000),  # epoch ms (Date.now del navegador)
                     "method": method,
-                    "endpoint": endpoint,
+                    "endpoint": ruta,
                     "http_status": http_status,
                     "latencia_ms": round(latencia_ms, 3),
                 }
