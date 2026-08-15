@@ -1,6 +1,4 @@
-import envConfig from './env-config.js';
-
-const API = envConfig.API_URL;
+const API = window.API_CONFIG?.API_URL || 'http://localhost:8000';
 
 // ── Cargar categorías al inicio ─────────────────────
 async function cargarCategorias() {

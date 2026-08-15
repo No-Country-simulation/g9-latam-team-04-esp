@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -6,17 +6,27 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Variables para forzar solo CPU (sin CUDA/GPU)
+ENV CUDA_VISIBLE_DEVICES=""
+ENV TORCH_CUDA_ARCH_LIST=""
+
 # Instalar dependencias del sistema necesarias para Oracle DB
 RUN apt update && apt install -y --no-install-recommends \
     libaio1t64 \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements primero para caché de Docker layer
-# NOTA: Este Dockerfile se construye desde la raíz del proyecto:
-# docker build -f backend/Dockerfile -t nombre-imagen .
+# NOTA: Compose construye desde la raíz del proyecto con context: .
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Instalar PyTorch CPU-only primero (más ligero)
+RUN pip install --no-cache-dir --prefer-binary \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Instalar dependencias Python
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt && \
+    pip cache purge
 
 # Copiar código fuente del backend (solo lo necesario)
 COPY backend/src/ ./src/
