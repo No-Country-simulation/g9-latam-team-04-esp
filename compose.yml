@@ -43,6 +43,7 @@ services:
       - "8000:8000"
     environment:
       # --- Variables de Entorno TK_ (leídas desde .env) ---
+      # NOTA: PYTHONDONTWRITEBYTECODE y PYTHONUNBUFFERED están en el Dockerfile
       - TK_DEBUG=${TK_DEBUG:-false}
       - TK_HOST=${TK_HOST:-0.0.0.0}
       - TK_PORT=${TK_PORT:-8000}
@@ -53,9 +54,20 @@ services:
       - TK_ORACLE_WALLET_DIR=${TK_ORACLE_WALLET_DIR}
       - TK_ORACLE_WALLET_PASSWORD=${TK_ORACLE_WALLET_PASSWORD}
       - TK_DEFAULT_LANGUAGE=${TK_DEFAULT_LANGUAGE:-auto}
+      # --- Umbrales y límites de la API ---
+      - TK_CONFIANZA_MINIMA=${TK_CONFIANZA_MINIMA:-0.25}
+      - TK_LOTE_MAXIMO=${TK_LOTE_MAXIMO:-100}
+      - TK_PAGINACION_MAXIMA=${TK_PAGINACION_MAXIMA:-100}
+      - TK_PAGINACION_DEFECTO=${TK_PAGINACION_DEFECTO:-20}
+      # --- Configuración del clasificador ---
+      - TK_TERMINOS_CLAVE_MAXIMOS=${TK_TERMINOS_CLAVE_MAXIMOS:-5}
+      - TK_DETECCION_IDIOMA_MAX_CHARS=${TK_DETECCION_IDIOMA_MAX_CHARS:-500}
+      # --- Configuración de validación ---
+      - TK_VALIDACION_MIN_LONGITUD=${TK_VALIDACION_MIN_LONGITUD:-5}
+      - TK_VALIDACION_MAX_RUIDO=${TK_VALIDACION_MAX_RUIDO:-0.8}
     volumes:
       - ./backend/src:/app/src # Live-reloading en desarrollo
-      - ./data-science/models:/app/data-science/models # Modelos de ML
+      - ./data-science/models:/app/data-science/models # Modelos de ML (montados externamente)
       - ./shared:/app/shared # Stop words
     depends_on:
       - oracle-db

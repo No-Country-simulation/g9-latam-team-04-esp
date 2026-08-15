@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+docs/
+
+# Data science files (para producción K8s)
+data-science/data/
+data-science/notebooks/
+data-science/scripts/
+!data-science/models/
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+compose.yml
+
+# Scripts de despliegue
+techmind.sh
+techmind.ps1
+
+# Kubernetes
+k8s/
+
+# Database local
+database/

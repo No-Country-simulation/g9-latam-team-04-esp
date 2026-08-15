@@ -39,4 +39,10 @@ data/*.db-shm
 # Frontend
 frontend/env-config.js
 
+# Oracle Wallet (NO subir al repo)
+oracle-wallet/
+*.sso
+*.p12
+tnsnames.ora
+
 # Docs
