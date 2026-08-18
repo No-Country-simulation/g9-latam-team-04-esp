@@ -54,6 +54,9 @@ class ItemResultadoBatch(BaseModel):
 
     posicion: int = Field(..., description="Índice original del contenido en la solicitud")
     exito: bool = Field(..., description="Indica si el ítem superó el umbral y fue persistido")
+    titulo: str | None = Field(
+        None, description="Título del contenido (presente incluso si el ítem falló)"
+    )
     data: ContenidoResponse | None = Field(
         None, description="Datos de la clasificación si fue exitosa"
     )

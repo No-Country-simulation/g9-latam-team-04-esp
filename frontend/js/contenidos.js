@@ -285,7 +285,7 @@
             ${resultados.map((r) => `
               <li class="flex items-start justify-between gap-3 py-2 text-[12px]">
                 <span class="font-mono text-muted/70">#${r.posicion + 1}</span>
-                <span class="min-w-0 flex-1 truncate text-paper">${escapeHtml(r.data && r.data.titulo ? r.data.titulo : t("lote.sinTitulo"))}</span>
+                <span class="min-w-0 flex-1 truncate text-paper">${escapeHtml(r.titulo || (r.data && r.data.titulo) || t("lote.sinTitulo"))}</span>
                 ${r.exito
                   ? `<span class="shrink-0 rounded-full border border-ash px-2 py-0.5 text-[11px] font-medium text-paper">${escapeHtml(r.data && r.data.categoria || "—")}</span>`
                   : `<span class="shrink-0 text-[11px] text-err" title="${escapeHtml(r.error || "")}">${escapeHtml(r.error || t("lote.errorItem"))}</span>`}
@@ -508,6 +508,26 @@ body.innerHTML = `
     $$("[data-eliminar]", body).forEach((btn) => {
       btn.addEventListener("click", onEliminar);
     });
+
+    // Paginación: anterior / siguiente
+    const prevBtn = $("#contenidos-prev", body);
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (state.pagina > 1) {
+          state.pagina--;
+          loadPage();
+        }
+      });
+    }
+    const nextBtn = $("#contenidos-next", body);
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        if (state.pagina < state.totalPaginas) {
+          state.pagina++;
+          loadPage();
+        }
+      });
+    }
   }
 
   function cardHtml(item) {
@@ -696,7 +716,7 @@ body.innerHTML = `
     if (!modal || !item) return;
     const titulo = $("#editar-titulo");
     const body = $("#editar-body");
-    if (titulo) titulo.textContent = 'Eitar contenido'; // item.titulo
+    if (titulo) titulo.textContent = t("contenidos.editar");
     if (body) {
       body.innerHTML = editarFormHtml(item);
       const form = $("[data-editar]", body);
