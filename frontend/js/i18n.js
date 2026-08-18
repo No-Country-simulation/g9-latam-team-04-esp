@@ -244,6 +244,7 @@
       "i18n.button.en": "EN",
       "i18n.label": "Cambiar idioma",
       "splash.show": "Mostrar presentación",
+      "presentacion.abrir": "Abrir presentación",
 
       "view.faq.title": "API y preguntas frecuentes",
       "view.faq.desc": "Todo lo que necesitas para consumir la API de TechMind: acceso, endpoints, ejemplos y errores comunes.",
@@ -537,6 +538,7 @@
       "i18n.button.en": "EN",
       "i18n.label": "Change language",
       "splash.show": "Show presentation",
+      "presentacion.abrir": "Open presentation",
 
       "view.faq.title": "API and FAQ",
       "view.faq.desc": "Everything you need to consume the TechMind API: access, endpoints, examples and common errors.",

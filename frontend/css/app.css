@@ -71,6 +71,13 @@
   opacity: 0.5;
 }
 
+/* Reutiliza el mismo dot grid para el modal de presentación */
+.presentacion-dotgrid {
+  background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+}
+
 /* ================= SPLASH: ENTRADA ================= */
 .splash-brand {
   opacity: 0;
