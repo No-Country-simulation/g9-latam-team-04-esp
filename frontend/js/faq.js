@@ -139,9 +139,9 @@
           <p class="mt-1 max-w-2xl text-[12px] leading-relaxed text-muted">${t("faq.ejemplos.desc")}</p>
           <div class="mt-4 grid gap-4 lg:grid-cols-3">
             ${EJEMPLOS.map((ej) => `
-              <div class="rounded-[12px] border border-ash/30 bg-void p-4">
+              <div class="min-w-0 rounded-[12px] border border-ash/30 bg-void p-4">
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-muted">${t(ej.titulo)}</p>
-                <pre class="mt-3 overflow-x-auto rounded-[8px] bg-coal p-3 font-mono text-[11px] leading-relaxed text-paper/90"><code>${escapeHtml(ej.code)}</code></pre>
+                <pre class="mt-3 w-full max-w-full overflow-x-auto rounded-[8px] bg-coal p-3 font-mono text-[11px] leading-relaxed text-paper/90"><code>${escapeHtml(ej.code)}</code></pre>
               </div>`).join("")}
           </div>
         </div>
