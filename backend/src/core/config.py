@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # FastAPI
-    app_name: str = "TechKnowledge"
+    app_name: str = "TechMind"
     app_version: str = "1.0.0"
     debug: bool = False
     cors_origins: list[str] = ["http://localhost:5500", "http://127.0.0.1:5500", "http://localhost", "http://127.0.0.1"]  # Configurable vía TK_CORS_ORIGINS
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     # Pydantic buscará automáticamente TK_OCI_ENABLED, TK_OCI_BUCKET_NAME, etc.
     oci_enabled: bool = False
     oci_config_path: Path | None = None
-    oci_bucket_name: str = ""
+    oci_bucket_name: str = "TechMind-models"
     oci_namespace: str = ""
 
     # Lenguaje por defecto

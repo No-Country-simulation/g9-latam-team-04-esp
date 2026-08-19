@@ -1,5 +1,5 @@
 """
-TechKnowledge API - Organizador Inteligente de Conocimiento Técnico.
+TechMind API - Organizador Inteligente de Conocimiento Técnico.
 
 FastAPI application entry point.
 """
@@ -8,6 +8,7 @@ FastAPI application entry point.
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,12 +16,14 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # imports de nuestros módulos (los relativos con .)
 from .api.contenido import router as contenido_router
+from .api.metricas import router as metricas_router
 from .core.config import settings
 from .core.database import init_db
+from .core.telemetria import telemetria
 from .services.clasificador import clasificador
 from .services.reentrenador import reentrenador
 
@@ -114,22 +117,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def telemetria_middleware(request, call_next):
+    """Registra método, ruta, status y latencia de cada request en memoria.
+
+    Alimenta ``GET /metrics``. Se excluye el propio ``/metrics`` para que las
+    consultas del panel no contaminen las métricas que muestra.
+    """
+    inicio = time.perf_counter()
+    response = await call_next(request)
+    latencia_ms = (time.perf_counter() - inicio) * 1000
+
+    ruta = request.url.path
+    if not ruta.startswith("/metrics"):
+        telemetria.registrar(
+            method=request.method,
+            endpoint=ruta,
+            http_status=response.status_code,
+            latencia_ms=latencia_ms,
+        )
+    return response
+
+
 # ── Routers (primero, para que tengan prioridad)
 app.include_router(contenido_router)
+app.include_router(metricas_router)
 
 # ── Frontend
-# FRONTEND_HTML = Path(__file__).resolve().parent.parent.parent / "frontend" / "index.html"
+# Sirve TODA la carpeta frontend/ (index.html + css/js/assets/vendor) desde la
+# raíz. Debe ir DESPUÉS del router para que los endpoints de la API tengan
+# prioridad; /docs y /redoc de FastAPI siguen funcionando (se registran al crear
+# la app, antes de este mount). html=True resuelve "/" a index.html.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
 
-# if FRONTEND_HTML.exists():
-
-#     @app.get("/")
-#     async def index():
-#         return FileResponse(str(FRONTEND_HTML))
-
-#     print("  [OK] Frontend servido en /")
-
-# else:
-#     print(f"  [WARN] Frontend no encontrado en {FRONTEND_HTML}")
+if FRONTEND_DIR.exists():
+    app.mount(
+        "/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend"
+    )
+    print(f"  [OK] Frontend servido en / desde {FRONTEND_DIR}")
+else:
+    print(f"  [WARN] Frontend no encontrado en {FRONTEND_DIR}")
 
 
 # ── Entry point

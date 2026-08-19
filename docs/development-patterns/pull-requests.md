@@ -1,6 +1,6 @@
 # Pull Requests & Squash Merge
 
-Este documento describe las directrices para la apertura e integración de Pull Requests (PRs) utilizando la estrategia de **Squash Merge** en el proyecto **TechKnowledge API**.
+Este documento describe las directrices para la apertura e integración de Pull Requests (PRs) utilizando la estrategia de **Squash Merge** en el proyecto **TechMind API**.
 
 ---
 

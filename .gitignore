@@ -46,3 +46,5 @@ oracle-wallet/
 tnsnames.ora
 
 # Docs
+# Herramienta local impeccable (sketches y dirección visual)
+.impeccable/

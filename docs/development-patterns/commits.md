@@ -1,6 +1,6 @@
 # Commit Convention
 
-El proyecto **TechKnowledge API** utiliza la especificación **Conventional Commits** para estandarizar el historial de cambios en el repositorio. Esto facilita el rastreo de cambios, la generación de logs y las automatizaciones de build.
+El proyecto **TechMind API** utiliza la especificación **Conventional Commits** para estandarizar el historial de cambios en el repositorio. Esto facilita el rastreo de cambios, la generación de logs y las automatizaciones de build.
 
 ---
 

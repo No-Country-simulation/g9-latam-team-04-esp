@@ -1,6 +1,6 @@
 # Branch Naming Convention
 
-Este documento detalla el estándar de nomenclatura obligatorio para la creación de ramas en el repositorio **TechKnowledge API**.
+Este documento detalla el estándar de nomenclatura obligatorio para la creación de ramas en el repositorio **TechMind API**.
 
 ---
 
