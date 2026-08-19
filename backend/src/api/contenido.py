@@ -233,6 +233,7 @@ async def clasificar_lote_json(body: ContenidoBatchRequest):
             ItemResultadoBatch(
                 posicion=item["posicion"],
                 exito=item["exito"],
+                titulo=item["titulo"],
                 data=(
                     ContenidoResponse(**item["data"])
                     if item["exito"]
@@ -349,6 +350,7 @@ async def clasificar_lote_csv(
             ItemResultadoBatch(
                 posicion=item["posicion"],
                 exito=item["exito"],
+                titulo=item["titulo"],
                 data=(
                     ContenidoResponse(**item["data"])
                     if item["exito"]
@@ -965,6 +967,7 @@ def _clasificar_y_persistir(
                 {
                     "posicion": indice,
                     "exito": True,
+                    "titulo": modelo.titulo,
                     "data": {
                         "id": contenido_id,
                         "titulo": modelo.titulo,
@@ -981,6 +984,7 @@ def _clasificar_y_persistir(
                 {
                     "posicion": indice,
                     "exito": False,
+                    "titulo": modelo.titulo,
                     "data": None,
                     "error": str(exc),
                 }
