@@ -9,24 +9,25 @@
     .\techmind.ps1 clean
 #>
 
-# Detectar el comando de Docker Compose (v2 'docker compose' o v1 'docker-compose')
-if (Get-Command docker compose -ErrorAction SilentlyContinue) {
-    $DOCKER_COMPOSE = "docker compose"
-} elseif (Get-Command docker-compose -ErrorAction SilentlyContinue) {
-    $DOCKER_COMPOSE = "docker-compose"
-} else {
+param (
+    [string]$Command = "help",
+    [string]$Service = ""
+)
+
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     Write-Host "❌ Error: Docker Compose no está instalado." -ForegroundColor Red
+    exit 1
+}
+
+& docker compose version *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Error: Docker Compose no está disponible." -ForegroundColor Red
     exit 1
 }
 
 # Definir valores por defecto para UID/GID para compatibilidad con el compose.yml
 $env:CURRENT_UID = "1000"
 $env:CURRENT_GID = "1000"
-
-param (
-    [string]$Command = "help",
-    [string]$Service = ""
-)
 
 function Show-Help {
     Write-Host "🚀 Script de gestión de TechKnowledge (Docker)" -ForegroundColor Cyan
@@ -98,7 +99,7 @@ function Init-Env {
 
 function Show-Status {
     Write-Host "📊 Estado de los contenedores:" -ForegroundColor Cyan
-    & $DOCKER_COMPOSE ps
+    docker compose ps
 }
 
 function Invoke-Prune {
@@ -124,12 +125,12 @@ switch ($Command.ToLower()) {
     "build" {
         Write-Host "🟢 Construyendo imágenes..." -ForegroundColor Cyan
         if (-not (Check-Env)) { exit 1 }
-        & $DOCKER_COMPOSE build
+        & docker compose build
     }
     "up" {
         Write-Host "🟢 Levantando el entorno..." -ForegroundColor Green
         if (-not (Check-Env)) { exit 1 }
-        & $DOCKER_COMPOSE up -d
+        & docker compose up -d
         Write-Host "✅ Entorno levantado" -ForegroundColor Green
         Write-Host "📝 Servicios disponibles:" -ForegroundColor Cyan
         Write-Host "  Frontend: http://localhost:80"
@@ -138,27 +139,27 @@ switch ($Command.ToLower()) {
     }
     "down" {
         Write-Host "🔴 Deteniendo servicios..." -ForegroundColor Red
-        & $DOCKER_COMPOSE down
+        & docker compose down
         Write-Host "✅ Servicios detenidos" -ForegroundColor Green
     }
     "restart" {
         Write-Host "🔄 Reiniciando servicios..." -ForegroundColor Yellow
-        & $DOCKER_COMPOSE restart
+        & docker compose restart
         Write-Host "✅ Servicios reiniciados" -ForegroundColor Green
     }
     "rebuild" {
         Write-Host "🔄 Reconstruyendo imágenes y levantando..." -ForegroundColor Yellow
         if (-not (Check-Env)) { exit 1 }
-        & $DOCKER_COMPOSE up -d --build
+        & docker compose up -d --build
         Write-Host "✅ Imágenes reconstruidas y servicios levantados" -ForegroundColor Green
     }
     "logs" {
         if ($Service) {
             Write-Host "📋 Logs del servicio: $Service" -ForegroundColor Cyan
-            & $DOCKER_COMPOSE logs -f $Service
+            & docker compose logs -f $Service
         } else {
             Write-Host "📋 Logs de todos los servicios" -ForegroundColor Cyan
-            & $DOCKER_COMPOSE logs -f
+            & docker compose logs -f
         }
     }
     "status" {
@@ -168,7 +169,7 @@ switch ($Command.ToLower()) {
         Write-Host "⚠️  Esto eliminará contenedores, redes y VOLÚMEN (¡borra datos de BD!)" -ForegroundColor Red
         $response = Read-Host "¿Continuar? (s/N)"
         if ($response -eq "s" -or $response -eq "S") {
-            & $DOCKER_COMPOSE down -v
+            & docker compose down -v
             Write-Host "✅ Limpieza completada" -ForegroundColor Green
         } else {
             Write-Host "Cancelado."

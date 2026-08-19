@@ -17,7 +17,7 @@ spec:
       containers:
       - name: frontend
         # CAMBIAR: Imagen real de Docker Hub u OCI Registry
-        image: gabrielsorrentino/frontend-techmind-hackaton:v1.0
+        image: gabrielsorrentino/frontend-techmind-hackaton:latest
         ports:
         - containerPort: 80
         env:

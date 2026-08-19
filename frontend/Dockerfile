@@ -8,7 +8,8 @@ COPY frontend/styles.css /usr/share/nginx/html/
 
 # Copiar script de generación de configuración
 COPY frontend/env.sh /docker-entrypoint.d/40-generate-env.sh
-RUN chmod +x /docker-entrypoint.d/40-generate-env.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/40-generate-env.sh \
+	&& chmod +x /docker-entrypoint.d/40-generate-env.sh
 
 EXPOSE 80
 

@@ -17,7 +17,7 @@ spec:
       containers:
       - name: backend
         # CAMBIAR: Imagen real de Docker Hub u OCI Registry
-        image: gabrielsorrentino/backend-techmind-hackaton:v1.0
+        image: gabrielsorrentino/backend-techmind-hackaton:latest
         ports:
         - containerPort: 8000
         env:
