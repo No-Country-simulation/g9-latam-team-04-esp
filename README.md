@@ -91,6 +91,14 @@ g9-latam-team-04-esp/
 │   │   ├── buscar.js               → Búsqueda semántica
 │   │   └── modelo.js               → Vista Modelo (reentrenamiento, F1)
 │   └── assets/                     → Logos, avatares, data/team.json
+├── docs/                            → Documentación del equipo (ver Anexos)
+│   ├── api-contract.md              → Contrato de API
+│   ├── git-guia-rapida.md           → Guía rápida de Git
+│   ├── runbook-reentrenamiento.md   → Runbook de reentrenamiento
+│   ├── reporte-testing-endpoints.md → Reporte de testing de endpoints
+│   ├── development-patterns/        → Patrones de desarrollo (git, issues, branches)
+│   ├── insomnia/                    → Colección Insomnia de la API
+│   └── resumenes/                   → Resúmenes de decisiones del equipo
 ├── Dockerfile                       → Imagen única: API + frontend (puerto 8000)
 ├── docker-compose.yml               → Deploy OCI (volumen para feedback)
 ├── .env.example                     → Variables TK_* documentadas
@@ -296,3 +304,30 @@ docker compose up -d --build   # reconstruye y reinicia con los cambios
 | Lucas Pavez | Backend Developer | [LucasKronos10](https://github.com/LucasKronos10) | [LinkedIn](https://www.linkedin.com/in/lucas-pavez/) |
 | Jhonny Alvino | Full Stack Developer | [alvinoDev](https://github.com/alvinoDev) | [LinkedIn](https://www.linkedin.com/in/alvinodev/) |
 | Henry Aspeti | Full Stack Developer | [HenBri](https://github.com/HenBri) | [LinkedIn](https://www.linkedin.com/in/henryaspeti/) |
+
+## Anexos
+
+Documentación adicional del equipo dentro de [`docs/`](docs/):
+
+### Guías y referencias
+
+| Documento | Descripción |
+|-----------|-------------|
+| [Guía rápida de Git](docs/git-guia-rapida.md) | Comandos esenciales y flujo de trabajo diario con Git. |
+| [Patrones de desarrollo](docs/development-patterns.md) | Índice de patrones: git workflow, issues, branches, commits y PRs. |
+| [Contrato de API](docs/api-contract.md) | Contrato formal de la API: rutas, payloads y códigos de respuesta. |
+| [Runbook de reentrenamiento](docs/runbook-reentrenamiento.md) | Procedimiento paso a paso para reentrenar los modelos. |
+| [Reporte de testing de endpoints](docs/reporte-testing-endpoints.md) | Resultados del testing exploratorio sobre los endpoints. |
+
+### Patrones de desarrollo
+
+* [Git workflow](docs/development-patterns/git-workflow.md) — flujo de ramas, hotfixes y limpieza.
+* [Branches](docs/development-patterns/branches.md) — nomenclatura de ramas del equipo.
+* [Commits](docs/development-patterns/commits.md) — Conventional Commits + scopes.
+* [Issues](docs/development-patterns/issues.md) — uso de issues y vinculación obligatoria.
+* [Pull requests](docs/development-patterns/pull-requests.md) — PRs + Squash Merge + template.
+
+### Colecciones y resúmenes
+
+* [Colección Insomnia de la API](docs/insomnia/techmind-api.yaml) — importable en Insomnia para probar todos los endpoints.
+* [Resúmenes del equipo](docs/resumenes/) — decisiones y resúmenes de arquitectura, modelo de clasificación, búsqueda semántica y reentrenamiento.
