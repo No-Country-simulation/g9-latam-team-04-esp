@@ -5,9 +5,9 @@ services:
     container_name: oracle_techknowledge
     restart: always
     environment:
-      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-root_password}
-      APP_USER: ${ORACLE_USER:-api_user}
-      APP_USER_PASSWORD: ${ORACLE_PASSWORD:-api_password}
+      ORACLE_PASSWORD: ${TK_ORACLE_PASSWORD:-root_password}
+      APP_USER: ${TK_ORACLE_USER:-api_user}
+      APP_USER_PASSWORD: ${TK_ORACLE_PASSWORD:-api_password}
     ports:
       - "1521:1521"
     volumes:
@@ -20,8 +20,8 @@ services:
     image: minio/minio:latest
     container_name: minio_storage
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password123}
+      MINIO_ROOT_USER: ${TK_MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${TK_MINIO_ROOT_PASSWORD:-password123}
     ports:
       - "9000:9000" # API REST S3/OCI
       - "9001:9001" # Consola Web
@@ -66,6 +66,24 @@ services:
       # --- Configuración de validación ---
       - TK_VALIDACION_MIN_LONGITUD=${TK_VALIDACION_MIN_LONGITUD:-5}
       - TK_VALIDACION_MAX_RUIDO=${TK_VALIDACION_MAX_RUIDO:-0.8}
+      # --- Reentrenamiento y administración ---
+      - TK_RETRAIN_MIN_FEEDBACK=${TK_RETRAIN_MIN_FEEDBACK:-50}
+      - TK_RETRAIN_MIN_F1_IMPROVEMENT=${TK_RETRAIN_MIN_F1_IMPROVEMENT:-0.00}
+      - TK_RELOAD_CHECK_INTERVAL_S=${TK_RELOAD_CHECK_INTERVAL_S:-86400}
+      - TK_ADMIN_TOKEN=${TK_ADMIN_TOKEN:-}
+      # --- Rutas configurables (mantienen los valores predeterminados) ---
+      - TK_MODEL_PATH_EN=${TK_MODEL_PATH_EN:-data-science/models/en/model_en.joblib}
+      - TK_VECTORIZER_PATH_EN=${TK_VECTORIZER_PATH_EN:-data-science/models/en/vectorizer_en.joblib}
+      - TK_MODEL_PATH_ES=${TK_MODEL_PATH_ES:-data-science/models/es/model_es.joblib}
+      - TK_VECTORIZER_PATH_ES=${TK_VECTORIZER_PATH_ES:-data-science/models/es/vectorizer_es.joblib}
+      - TK_FEEDBACK_DIR=${TK_FEEDBACK_DIR:-data-science/data/feedback}
+      - TK_METRICS_DIR=${TK_METRICS_DIR:-data-science/models}
+      - TK_RETRAIN_SCRIPT_PATH=${TK_RETRAIN_SCRIPT_PATH:-data-science/scripts/reentrenar.py}
+      # --- OCI Object Storage (opcional) ---
+      - TK_OCI_ENABLED=${TK_OCI_ENABLED:-false}
+      - TK_OCI_CONFIG_PATH=${TK_OCI_CONFIG_PATH:-}
+      - TK_OCI_BUCKET_NAME=${TK_OCI_BUCKET_NAME:-TechMind-models}
+      - TK_OCI_NAMESPACE=${TK_OCI_NAMESPACE:-}
     volumes:
       - ./backend/src:/app/src # Live-reloading en desarrollo
       - ./data-science/models:/app/data-science/models # Modelos de ML (montados externamente)
@@ -86,11 +104,13 @@ services:
       - "80:80"
     environment:
       - ENVIRONMENT=development
-      - TK_BE_URL=${TK_BE_URL} # Variable leída desde .env en la raíz
+      - TK_BE_URL=${TK_BE_URL:-http://localhost:8000}
     volumes:
       - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
-      - ./frontend/app.js:/usr/share/nginx/html/app.js:ro
-      - ./frontend/styles.css:/usr/share/nginx/html/styles.css:ro
+      - ./frontend/js:/usr/share/nginx/html/js:ro
+      - ./frontend/css:/usr/share/nginx/html/css:ro
+      - ./frontend/assets:/usr/share/nginx/html/assets:ro
+      - ./frontend/vendor:/usr/share/nginx/html/vendor:ro
     depends_on:
       - backend
     networks:
