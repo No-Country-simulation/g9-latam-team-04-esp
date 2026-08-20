@@ -1,0 +1,140 @@
+﻿{
+  "info": {
+    "_postman_id": "a8b9c1d2-3e4f-5678-90ab-cdef12345678",
+    "name": "API Backend - Clasificación y Búsqueda Semántica",
+    "description": "Colección de endpoints para la API del Backend (FastAPI + Oracle DB + ML)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check Root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        },
+        "description": "Verifica la respuesta raíz del servidor."
+      }
+    },
+    {
+      "name": "Health Check API Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Verifica el estado del servicio, base de datos, modelo clasificador y embeddings."
+      }
+    },
+    {
+      "name": "Clasificar Contenido Técnico",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Optimización de consultas SQL en Oracle\",\n  \"texto\": \"Cómo utilizar índices y análisis de planes de ejecución para mejorar el rendimiento.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/contenido",
+          "host": ["{{baseUrl}}"],
+          "path": ["contenido"]
+        },
+        "description": "Clasifica un contenido técnico individual generando sus embeddings y almacenándolo."
+      }
+    },
+    {
+      "name": "Clasificar Lote desde JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"titulo\": \"Introducción a FastAPI\",\n    \"texto\": \"Creación de APIs asíncronas de alto rendimiento con Python 3.13.\"\n  },\n  {\n    \"titulo\": \"Modelos de Embeddings\",\n    \"texto\": \"Uso de SentenceTransformers para representaciones vectoriales.\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/contenido/lote-json",
+          "host": ["{{baseUrl}}"],
+          "path": ["contenido", "lote-json"]
+        },
+        "description": "Clasifica un arreglo de objetos JSON en procesamiento por lotes."
+      }
+    },
+    {
+      "name": "Clasificar Lote desde CSV",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/contenido/lote-csv",
+          "host": ["{{baseUrl}}"],
+          "path": ["contenido", "lote-csv"]
+        },
+        "description": "Procesa un archivo CSV con múltiples contenidos para clasificar e insertar en lote."
+      }
+    },
+    {
+      "name": "Listar / Buscar Historial",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/historial?limite=10&pagina=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["historial"],
+          "query": [
+            { "key": "limite", "value": "10" },
+            { "key": "pagina", "value": "1" }
+          ]
+        },
+        "description": "Lista o busca los contenidos procesados y almacenados en la base de datos."
+      }
+    },
+    {
+      "name": "Búsqueda Semántica",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"arquitectura de microservicios y bases de datos\",\n  \"top_k\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/contenidos/busqueda-semantica",
+          "host": ["{{baseUrl}}"],
+          "path": ["contenidos", "busqueda-semantica"]
+        },
+        "description": "Realiza búsquedas por similitud cosenoidal utilizando embeddings vectoriales."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}
