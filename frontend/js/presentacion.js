@@ -23,7 +23,7 @@
     {
       title: "El problema",
       html: `
-        <div class="max-w-2xl">
+        <div class="max-w-3xl">
           <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">Problema</span>
           <h2 class="mt-4 text-[22px] lg:text-[30px] font-semibold tracking-[-0.5px] text-paper">Dolor: Demasiado conocimiento técnico sin organizar</h2>
           <ul class="my-6 space-y-3 text-[18px] leading-relaxed text-muted">
@@ -57,7 +57,7 @@
               </div>
             </div>
 
-            <!-- Bloque 2: No escala a mano -->
+            <!-- Bloque 2: Reinvención de la rueda -->
             <div class="p-4 lg:p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-volt/30 transition-all duration-300 flex items-center justify-center gap-4">
               <!-- Icono Capas / Stack -->
               <div class="w-12 h-12 lg:w-14 lg:h-14 rounded-xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt shrink-0">
@@ -68,22 +68,22 @@
               <!-- Contenido -->
               <div class="flex-1">
                 <h3 class="text-[16px] lg:text-[18px] font-semibold text-paper flex items-center gap-2 flex-wrap">
-                  No escala a mano
+                  Reinvención de la rueda
                 </h3>
                 <ul class="mt-2 space-y-1 text-[12px] lg:text-[13px] text-muted leading-relaxed">
                   <li class="flex items-start gap-2">
                     <span class="text-volt">•</span>
-                    <span>Ninguna persona puede leer y etiquetar todo el contenido técnico que se publica cada día.</span>
+                    <span>Varios miembros del equipo resuelven el mismo problema de forma independiente.</span>
                   </li>
                   <li class="flex items-start gap-2">
                     <span class="text-volt">•</span>
-                    <span>Imposible categorizar manualmente.</span>
+                    <span>Falta de un repositorio centralizado de soluciones probadas.</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <!-- Bloque 3: Caos de Formatos -->
+            <!-- Bloque 3: Conocimiento fragmentado -->
             <div class="p-4 lg:p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-volt/30 transition-all duration-300 flex items-center justify-center gap-4">
               <!-- Icono Documentos dispersos / Caos (SVG) -->
               <div class="w-12 h-12 lg:w-14 lg:h-14 rounded-xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt shrink-0">
@@ -94,13 +94,17 @@
               <!-- Contenido -->
               <div class="flex-1">
                 <h3 class="text-[16px] lg:text-[18px] font-semibold text-paper">
-                  Caos de Formatos
+                  Conocimiento fragmentado
                   <span class="text-[12px] lg:text-[13px] font-normal text-muted">(Sin Metadatos)</span>
                 </h3>
                 <ul class="mt-2 space-y-1 text-[12px] lg:text-[13px] text-muted leading-relaxed">
                   <li class="flex items-start gap-2">
                     <span class="text-volt">•</span>
-                    <span>El conocimiento queda muerto: no se comparte, ni se consume, no estandarizado e imposible de reutilizar.</span>
+                    <span>La documentación vive dispersa en artículos, tutoriales, apuntes o repositorios olvidados.</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-volt">•</span>
+                    <span>Cuando un desarrollador clave se va, el contexto técnico se pierde con él.</span>
                   </li>
                 </ul>
               </div>
@@ -212,7 +216,7 @@
             </h4>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
               <div class="p-2.5 rounded-lg bg-black/20 border border-white/5">
-                <p class="text-[20px] font-bold text-volt">-50%</p>
+                <p class="text-[20px] font-bold text-volt">-67%</p>
                 <p class="text-[11px] text-muted mt-0.5">Tiempo de búsqueda</p>
               </div>
               <div class="p-2.5 rounded-lg bg-black/20 border border-white/5">
@@ -220,8 +224,8 @@
                 <p class="text-[11px] text-muted mt-0.5">Productividad global</p>
               </div>
               <div class="p-2.5 rounded-lg bg-black/20 border border-white/5">
-                <p class="text-[20px] font-bold text-volt">Inteligente</p>
-                <p class="text-[11px] text-muted mt-0.5">Recomendación relacional</p>
+                <p class="text-[20px] font-bold text-volt">Clasificación</p>
+                <p class="text-[11px] text-muted mt-0.5">Repositorio centralizado</p>
               </div>
               <div class="p-2.5 rounded-lg bg-black/20 border border-white/5">
                 <p class="text-[20px] font-bold text-volt">Automático</p>
@@ -237,7 +241,7 @@
         <div class="max-w-3xl w-full mx-auto">
           <!-- Encabezado de la Slide -->
           <div class="text-center mb-8">
-            <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">IA & NLP</span>
+            <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">Machine Learning</span>
             <h2 class="mt-3 text-[26px] lg:text-[34px] font-semibold tracking-[-0.5px] text-paper">Capacidades Principales del Modelo</h2>
             <p class="mt-1 text-[13px] lg:text-[15px] text-muted">Motor de procesamiento del lenguaje adaptado a conocimiento técnico.</p>
           </div>
@@ -283,6 +287,133 @@
               </p>
             </div>
           </div>
+        </div>`,
+    },
+    {
+      title: "Cómo funciona el modelo",
+      html: `
+        <div class="max-w-3xl w-full mx-auto">
+          <div class="text-center mb-8">
+            <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">Machine Learning</span>
+            <h2 class="mt-3 text-[26px] lg:text-[34px] font-semibold tracking-[-0.5px] text-paper">Cómo funciona el modelo</h2>
+            <p class="mt-1 text-[13px] lg:text-[15px] text-muted">Compara patrones aprendidos de contenido real.</p>
+          </div>
+
+          <!-- Pipeline -->
+          <div class="flex flex-wrap items-center justify-center gap-2 text-[11px] lg:text-[12px] font-mono">
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-muted">texto</span>
+            <span class="text-volt">→</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-muted">limpieza</span>
+            <span class="text-volt">→</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-muted">TF-IDF</span>
+            <span class="text-volt">→</span>
+            <span class="px-3 py-1.5 rounded-lg bg-volt/10 border border-volt/30 text-volt">Regresión Logística</span>
+            <span class="text-volt">→</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-muted">categoría + confianza</span>
+          </div>
+
+          <!-- Puntos clave -->
+          <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-[15px] font-semibold text-paper mb-3">Entrenado con datos reales</h3>
+              <ul class="space-y-2 text-[13px] text-muted">
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>60.000+ artículos técnicos (dev.to)</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>7 categorías: Backend, Frontend, Cloud, DevOps, Database, Data Eng., Data Science</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Un modelo por idioma (EN / ES)</li>
+              </ul>
+            </div>
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-[15px] font-semibold text-paper mb-3">Con un texto nuevo</h3>
+              <ul class="space-y-2 text-[13px] text-muted">
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Se convierte al mismo formato numérico</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Se compara contra los patrones aprendidos</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Elige la categoría a la que más se parece</li>
+              </ul>
+            </div>
+          </div>
+        </div>`,
+    },
+    {
+      title: "Clasificación y keywords",
+      html: `
+        <div class="max-w-3xl w-full mx-auto">
+          <div class="text-center mb-8">
+            <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">Machine Learning</span>
+            <h2 class="mt-3 text-[26px] lg:text-[34px] font-semibold tracking-[-0.5px] text-paper">Clasifica y extrae keywords</h2>
+            <p class="mt-1 text-[13px] lg:text-[15px] text-muted">Dos capacidades, un mismo criterio: lo distintivo importa.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Clasificación -->
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div class="w-10 h-10 rounded-xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-paper">Clasificación temática</h3>
+              <ul class="mt-3 space-y-2 text-[13px] text-muted">
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Detecta palabras típicas de cada categoría</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Asigna la categoría más parecida</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>7 categorías técnicas, una por contenido</li>
+              </ul>
+            </div>
+
+            <!-- Keywords -->
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div class="w-10 h-10 rounded-xl bg-volt/10 border border-volt/20 flex items-center justify-center text-volt mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"/></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-paper">Extracción de keywords</h3>
+              <ul class="mt-3 space-y-2 text-[13px] text-muted">
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>No las más repetidas: las más distintivas</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>"el" no dice nada — "PostgreSQL" sí</li>
+                <li class="flex gap-2"><span class="text-volt mt-0.5">•</span>Explican el porqué de la decisión</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Técnica en una línea -->
+          <div class="mt-4 p-4 rounded-xl bg-volt/5 border border-volt/20">
+            <p class="text-[13px] text-muted text-center">
+              <span class="text-volt font-semibold">TF-IDF:</span> pesa más lo <span class="text-paper font-medium">raro pero revelador</span>, menos lo común.
+            </p>
+          </div>
+        </div>`,
+    },
+    {
+      title: "Score de confianza",
+      html: `
+        <div class="max-w-2xl w-full mx-auto text-center">
+          <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt">Machine Learning</span>
+          <h2 class="mt-3 text-[26px] lg:text-[34px] font-semibold tracking-[-0.5px] text-paper">El modelo nunca responde a ciegas</h2>
+
+          <!-- Destaque puntual: la demo en video muestra el detalle -->
+          <div class="mt-8">
+            <div class="text-[110px] lg:text-[140px] font-bold leading-none tracking-[-4px] text-volt">65%</div>
+            <p class="mt-2 text-[16px] text-paper font-medium">probabilidad estimada — categoría elegida: Backend</p>
+          </div>
+
+          <p class="mt-8 text-[13px] text-muted">
+            Calcula la probabilidad para las <span class="text-paper font-semibold">7 categorías</span> y devuelve la mayor.
+            Confianza baja = contenido ambiguo.
+          </p>
+        </div>`,
+    },
+    {
+      title: "Momento de la demo",
+      html: `
+        <div class="flex flex-col items-center justify-center text-center max-w-2xl w-full mx-auto min-h-[55vh]">
+          <span class="rounded-full bg-volt/10 border border-volt/20 px-3 py-1 text-[11px] font-semibold text-volt uppercase tracking-[0.3em]">Demo en vivo</span>
+          <h2 class="mt-5 text-[30px] lg:text-[42px] font-semibold tracking-[-1px] text-paper leading-tight">Basta de teoría,<br>veamos <span class="text-volt">TechMind</span> en acción</h2>
+
+          <!-- Play button -->
+          <div class="mt-10 relative">
+            <div class="absolute inset-0 rounded-full bg-volt/30 blur-xl animate-pulse"></div>
+            <div class="relative w-24 h-24 rounded-full bg-volt/10 border-2 border-volt/40 flex items-center justify-center">
+              <svg class="w-10 h-10 text-volt ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+
+          <p class="mt-6 text-[14px] text-muted">La API real, con Oracle en la nube — contenido real, respuestas reales.</p>
         </div>`,
     },
     {
