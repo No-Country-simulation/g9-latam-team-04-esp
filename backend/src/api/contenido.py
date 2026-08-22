@@ -686,12 +686,14 @@ async def corregir_clasificacion_endpoint(
 @router.get(
     "/contenidos/exportar-dataset",
     status_code=status.HTTP_200_OK,
-    summary="Exportar dataset de entrenamiento",
+    summary="Exportar dataset de feedback",
     description="Exporta contenidos clasificados como CSV o JSON con columnas "
     "titulo, texto y categoria (la vigente). Filtra por idioma y opcionalmente "
     "solo los contenidos verificados por humanos (ground truth). "
     "Formato por defecto: CSV descargable. Con ``guardar=true`` además escribe "
-    "el archivo en la carpeta de feedback (para alimentar el reentrenamiento).",
+    "el archivo en la carpeta de feedback (para alimentar el reentrenamiento). "
+    "Al guardar, el archivo SIEMPRE se escribe en formato CSV (formato del reentrenador), "
+    "independiente del parámetro ``formato`` que solo afecta la descarga.",
 )
 async def exportar_dataset_endpoint(
     idioma: Literal["en", "es", "todos"] = Query(
@@ -700,23 +702,26 @@ async def exportar_dataset_endpoint(
     solo_verificados: bool = Query(
         True,
         description="True: solo contenidos con feedback humano (ground truth). "
-        "False: todos, con la categoría vigente.",
+        "False: todos, con la categoría vigente (pseudo-etiquetas).",
     ),
     formato: Literal["csv", "json"] = Query(
-        "csv", description="Formato de salida: csv (descargable) o json"
+        "csv", description="Formato de la descarga: csv o json. "
+        "Al guardar en backend (guardar=true) SIEMPRE se escribe CSV."
     ),
     guardar: bool = Query(
         False,
         description="True: además de devolver el resultado, guarda el archivo "
-        "en la carpeta de feedback definida en config (feedback_dir). "
-        "False: solo devuelve, sin tocar disco.",
+        "en la carpeta de feedback definida en config (feedback_dir) "
+        "en formato CSV para el reentrenador. False: solo devuelve, sin tocar disco.",
     ),
 ):
-    """Exporta el dataset de entrenamiento desde la BD.
+    """Exporta el dataset de feedback desde la BD.
 
-    Con ``guardar=True`` escribe el archivo en ``settings.feedback_dir`` con el
-    mismo nombre que el endpoint de descarga (ej. ``dataset_feedback_es.csv``),
-    listo para que el reentrenamiento lo lea sin copiar/pegar manual.
+    Con ``guardar=True`` escribe el archivo en ``settings.feedback_dir`` en formato CSV
+    (formato requerido por el reentrenador) con nombre ``dataset_feedback_{idioma}.csv``.
+    Si ``idioma=todos`` genera 3 archivos: ``dataset_feedback_es.csv``,
+    ``dataset_feedback_en.csv`` y ``dataset_feedback.csv``.
+    El parámetro ``formato`` solo afecta la descarga (CSV/JSON), no el guardado en disco.
     """
     filas = await asyncio.to_thread(
         exportar_dataset,
@@ -724,47 +729,82 @@ async def exportar_dataset_endpoint(
         solo_verificados=solo_verificados,
     )
 
+    # Nombre base SIEMPRE usa "feedback" (nunca "contenidos")
+    # solo_verificados controla QUÉ filas, no el nombre del archivo
     sufijo = "" if idioma == "todos" else f"_{idioma}"
-    prefijo = "feedback" if solo_verificados else "contenidos"
-    nombre_base = f"dataset_{prefijo}{sufijo}"
+    nombre_base = f"dataset_feedback{sufijo}"
 
+    # Preparar contenido según formato (para la descarga)
     if formato == "json":
-        contenido_json = filas
+        contenido_descarga = filas
+        media_type = "application/json"
+        ext_descarga = "json"
     else:
         buffer = io.StringIO()
         writer = csv.DictWriter(buffer, fieldnames=["titulo", "texto", "categoria"])
         writer.writeheader()
-        writer.writerows(filas)
-        csv_texto = buffer.getvalue()
+        # Filtrar solo los campos esperados (sin 'idioma') para el CSV
+        filas_csv = [{k: f[k] for k in ("titulo", "texto", "categoria")} for f in filas]
+        writer.writerows(filas_csv)
+        contenido_descarga = buffer.getvalue()
+        media_type = "text/csv; charset=utf-8"
+        ext_descarga = "csv"
 
-    # ── Guardado automático en disco (mini-pipeline de reentrenamiento)
+    # ── Guardado automático en disco (solo CSV, formato del reentrenador)
     if guardar:
         settings.feedback_dir.mkdir(parents=True, exist_ok=True)
-        nombre_archivo = f"{nombre_base}.{formato}"
-        ruta = settings.feedback_dir / nombre_archivo
-        if formato == "json":
-            ruta.write_text(
-                json.dumps(contenido_json, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
+        archivos_guardados = []
+
+        def _guardar_csv(suf: str, datos: list[dict]) -> str:
+            """Guarda CSV en feedback_dir y retorna nombre del archivo."""
+            nombre = f"dataset_feedback{suf}.csv"
+            ruta = settings.feedback_dir / nombre
+            buf = io.StringIO()
+            writer = csv.DictWriter(buf, fieldnames=["titulo", "texto", "categoria"])
+            writer.writeheader()
+            # Filtrar solo campos esperados (sin 'idioma')
+            datos_csv = [{k: d[k] for k in ("titulo", "texto", "categoria")} for d in datos]
+            writer.writerows(datos_csv)
+            ruta.write_text(buf.getvalue(), encoding="utf-8")
+            return nombre
+
+        if idioma == "todos":
+            # Generar 3 archivos: _es, _en, genérico
+            filas_es = [f for f in filas if f.get("idioma") == "es"]
+            filas_en = [f for f in filas if f.get("idioma") == "en"]
+            if filas_es:
+                _guardar_csv("_es", filas_es)
+                archivos_guardados.append("dataset_feedback_es.csv")
+            if filas_en:
+                _guardar_csv("_en", filas_en)
+                archivos_guardados.append("dataset_feedback_en.csv")
+            # Archivo genérico con todos
+            _guardar_csv("", filas)
+            archivos_guardados.append("dataset_feedback.csv")
         else:
-            ruta.write_text(csv_texto, encoding="utf-8")
+            _guardar_csv(sufijo, filas)
+            archivos_guardados.append(f"dataset_feedback{sufijo}.csv")
+
         return Response(
             content=json.dumps({
                 "respuesta": "ok",
                 "guardado": True,
-                "archivo": nombre_archivo,
-                "ruta": str(ruta),
+                "archivos": archivos_guardados,
                 "filas": len(filas),
             }),
             media_type="application/json",
         )
 
+    # Descarga: respeta el formato solicitado (csv o json)
     if formato == "json":
-        return contenido_json
+        return Response(
+            content=json.dumps(contenido_descarga, ensure_ascii=False, indent=2),
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{nombre_base}.json"'},
+        )
 
     return Response(
-        content=csv_texto,
+        content=contenido_descarga,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{nombre_base}.csv"'},
     )

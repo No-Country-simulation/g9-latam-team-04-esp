@@ -91,7 +91,7 @@
           <h2 class="text-[15px] font-semibold tracking-[-0.3px] text-paper">${t("exportar.titulo")}</h2>
           <p class="mt-1 max-w-2xl text-[12px] leading-relaxed text-muted">${t("exportar.nota")}</p>
 
-          <form id="exportar-form" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+          <form id="exportar-form" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:items-end">
             <label>
               <span class="mb-1.5 block text-[14px] font-medium tracking-[0.5px] text-muted">${t("exportar.idioma")}</span>
               <select id="exportar-idioma"
@@ -111,10 +111,6 @@
                 <option value="json">JSON</option>
               </select>
             </label>
-            <label class="flex cursor-pointer select-none items-center gap-2 text-[13px] font-medium text-muted lg:pt-6">
-              <input type="checkbox" id="exportar-verificados" class="demo-toggle" checked>
-              <span>${t("exportar.soloVerificados")}</span>
-            </label>
             <div class="flex flex-col gap-2 sm:col-span-2 lg:col-span-1 lg:pt-0">
               <button type="button" id="exportar-descargar"
                 class="rounded-[8px] bg-volt px-4 py-2.5 text-[13px] font-semibold text-void
@@ -123,9 +119,9 @@
                 ${t("exportar.descargar")}
               </button>
               <button type="button" id="exportar-guardar"
-                class="rounded-[8px] border border-ash px-4 py-2.5 text-[13px] font-semibold text-muted
-                       transition-colors duration-200 hover:border-ash hover:bg-dot hover:text-paper
-                       disabled:cursor-not-allowed disabled:opacity-50">
+                class="rounded-[8px] bg-volt px-4 py-2.5 text-[13px] font-semibold text-void
+                       transition-[background-color,filter] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]
+                       hover:brightness-95 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50">
                 ${t("exportar.guardarBtn")}
               </button>
             </div>
@@ -145,7 +141,7 @@
     return {
       idioma: ($("#exportar-idioma") || {}).value || "todos",
       formato: ($("#exportar-formato") || {}).value || "csv",
-      solo_verificados: $("#exportar-verificados") ? $("#exportar-verificados").checked : true,
+      // solo_verificados siempre true por defecto en el backend (ground truth)
     };
   }
 
@@ -168,8 +164,8 @@
 
   function exportFilename(params) {
     const suf = params.idioma === "todos" ? "" : `_${params.idioma}`;
-    const pre = params.solo_verificados ? "feedback" : "contenidos";
-    return `dataset_${pre}${suf}.${params.formato}`;
+    // Siempre usa "feedback" como prefijo (backend ya no usa "contenidos")
+    return `dataset_feedback${suf}.${params.formato}`;
   }
 
   function bindExportar() {
@@ -206,7 +202,9 @@
         saveBtn.disabled = true;
         try {
           const res = await api.guardarDataset(params);
-          feedback.textContent = `${t("exportar.guardado")} ${escapeHtml(res.archivo || "")} · ${res.filas != null ? `${res.filas} ${t("exportar.filasLabel")}` : ""}`;
+          // El backend ahora devuelve { archivos: ["dataset_feedback_es.csv", ...], filas: N }
+          const archivos = (res.archivos || []).join(", ") || (res.archivo ? res.archivo : "");
+          feedback.textContent = `${t("exportar.guardado")} ${escapeHtml(archivos)} · ${res.filas != null ? `${res.filas} ${t("exportar.filasLabel")}` : ""}`;
           feedback.classList.add("text-ok");
         } catch (err) {
           feedback.textContent = `${t("exportar.error")}: ${escapeHtml(err.message)}`;
