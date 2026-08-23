@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Entorno
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data science (raw data pesado)
+data-science/data/raw/*.csv
+
+# Datasets de feedback exportados por la API (se regeneran con exportar-dataset?guardar=true)
+data-science/data/feedback/
+
+# Backups de modelos generados en el reentrenamiento (transitorios, se regeneran solos)
+data-science/models/*/backups/
+
+# Ejecutables/artefactos pesados opcionales (descomentar si no querés versionarlos)
+# data-science/models/*/model_*.joblib
+# data-science/models/*/vectorizer_*.joblib
+
+# SQLite
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Docs
+# Herramienta local impeccable (sketches y dirección visual)
+.impeccable/

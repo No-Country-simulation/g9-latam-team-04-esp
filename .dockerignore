@@ -1,0 +1,33 @@
+# Git y metadatos
+.git
+.gitignore
+.github/
+.impeccable/
+
+# Entorno y secretos (se inyectan como env vars en el deploy, NUNCA en la imagen)
+.env
+.env.*
+!*.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Datos pesados que no se necesitan en runtime
+data-science/notebooks/
+data-science/data/raw/
+database/
+
+# Docs locales (la imagen solo necesita backend/ + frontend/ + data-science/models)
+docs/
+*.md

@@ -1,0 +1,437 @@
+/* TechMind — app.css
+   Mundo visual: Oscuro Técnico de Alto Contraste (Volt) con modo claro equivalente.
+   Fuente normativa: .impeccable/direccion-visual-oficial.md
+   - Cero sombras: diseño plano apoyado en contraste y bordes.
+   - Dot grid técnico a 24px.
+   - Volt (#CCFF5C) = acento/interactivo. #A1FFF5 = SOLO estados OK.
+   - Radios: 16px tarjetas, 8px botones/chips.
+   - Los colores son variables: el tema claro redefine los canales RGB. */
+
+/* ================= TOKENS DE TEMA =================
+   Canales RGB para que Tailwind genere rgb(var(--c-x) / alpha). */
+:root {
+  color-scheme: dark;
+
+  /* Modo Oscuro (Basado en tus propuestas oscuras y neón) */
+  --c-void: 0 0 0;             /* #000000 Deep Black (Fondo) */
+  --c-coal: 14 14 14;          /* #141414 Deep Green (Superficies/Tarjetas) */
+  --c-ash: 28 28 28;           /* #282828 Borde verde oscuro */
+  --c-dot: 31 31 31;           /* #1f1f1f Malla / Hover sutil */
+  --c-paper: 255 255 255;      /* #FFFFFF Clean White (Texto primario) */
+  --c-muted: 138 138 138;      /* #8a8a8a Texto secundario */
+  --c-volt: 187 250 50;        /* #CCFF5C Electric Lime (Acento principal) */
+  
+  /* Estados de feedback */
+  --c-ok: 161 255 245;         /* #A1FFF5 Cool Aqua (Éxito) */
+  --c-warn: 233 255 135;       /* #E9FF87 Electric Lime (Advertencia) */
+  --c-err: 255 121 122;        /* #FF797A Rose White (Error) */
+
+  /* Timing del efecto de tema (theme-toggle-effect) */
+  --expo-out: linear(
+    0 0%, 0.1684 2.66%, 0.3165 5.49%,
+    0.446 8.52%, 0.5581 11.78%,
+    0.6535 15.29%, 0.7341 19.11%,
+    0.8011 23.3%, 0.8557 27.93%,
+    0.8962 32.68%, 0.9283 38.01%,
+    0.9529 44.08%, 0.9711 51.14%,
+    0.9833 59.06%, 0.9915 68.74%, 1 100%
+  );
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Modo Claro (Adaptación para legibilidad sobre fondo claro) */
+  --c-void: 245 245 247;       /* #F5F5F7 Fondo base (gris neutro limpio y fresco) */
+  --c-coal: 255 255 255;       /* #FFFFFF Superficies/Tarjetas (blanco puro elevado) */
+  --c-ash: 228 228 231;        /* #E4E4E7 Bordes definidos (zinc-200, limpio) */
+  --c-dot: 238 238 242;        /* #EEEEF2 Malla / Hovers sutiles (fácilmente visible sin ensuciar) */
+  --c-paper: 11 11 11;         /* #0b0b0b Texto primario */
+  --c-muted: 106 106 100;      /* #6a6a64 Verde oscuro para buen contraste */
+  --c-volt: 123 172 0;          /* #7bac00 Verde lima oscuro, denso y legible */
+  
+  /* Estados ajustados para fondos claros */
+  --c-ok: 0 120 110;           /* #00786E Teal/Aqua oscuro*/
+  --c-warn: 88 100 0;         /* #586400 Oliva/Lima oscuro*/
+  --c-err: 195 35 40;          /* #C32328 Rojo/Coral intenso*/
+}
+
+/* Logos blancos (marca y aliados): en modo claro se invierten para
+   mantener contraste sobre fondo claro. Solo aplica en light: en dark
+   el filtro se desactiva y el logo vuelve a su blanco original. */
+:root[data-theme="light"] .logo-invert {
+  filter: invert(1);
+}
+
+/* ================= DOT GRID DEL MUNDO =================
+   Fondo del color de fondo, puntos del color dot, @24px. */
+.splash-dotgrid {
+  background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.5;
+}
+
+/* Reutiliza el mismo dot grid para el modal de presentación */
+.presentacion-dotgrid {
+  background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+}
+
+/* ================= SPLASH: ENTRADA ================= */
+.splash-brand {
+  opacity: 0;
+  animation: splash-fade-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+}
+
+@keyframes splash-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#splash-team > li {
+  opacity: 0;
+  animation: splash-fade-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+#splash-team > li:nth-child(1) { animation-delay: 0.25s; }
+#splash-team > li:nth-child(2) { animation-delay: 0.32s; }
+#splash-team > li:nth-child(3) { animation-delay: 0.39s; }
+#splash-team > li:nth-child(4) { animation-delay: 0.46s; }
+#splash-team > li:nth-child(5) { animation-delay: 0.53s; }
+#splash-team > li:nth-child(6) { animation-delay: 0.60s; }
+#splash-team > li:nth-child(7) { animation-delay: 0.67s; }
+#splash-team > li:nth-child(8) { animation-delay: 0.74s; }
+
+/* ================= AVATAR FALLBACK (iniciales) ================= */
+.avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: rgb(var(--c-coal));
+  border: 1px solid rgb(var(--c-ash));
+  color: rgb(var(--c-volt));
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ================= SALIDA DE LA SPLASH ================= */
+#splash.exit {
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+#app.revealed {
+  animation: app-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes app-reveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ================= FOCO VISIBLE ================= */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgb(var(--c-volt));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ================= SHELL — FASE 2 ================= */
+/* ---- Logo símbolo (sidebar) ---- */
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.brand-icon:hover {
+  background: rgb(var(--c-dot));
+}
+.brand-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* ---- Nav item activo ---- */
+.nav-item.nav-active {
+  background: rgb(var(--c-dot));
+  color: rgb(var(--c-volt));
+}
+
+.nav-item.nav-active svg {
+  color: rgb(var(--c-volt));
+}
+
+/* ---- Transición de vista: salida rápida + entrada perceptible ----
+   La salida dura ~140ms; la nueva vista entra con slide+blur para que
+   el cambio sea evidente (mundo Volt: sin exagerar). */
+.view-leave {
+  animation: view-leave 0.14s ease-out forwards;
+}
+
+@keyframes view-leave {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+.view-enter {
+  animation: view-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* ---- Empty state (fases por construir) ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 320px;
+  border: 1px solid rgb(var(--c-ash));
+  border-radius: 16px;
+  background: rgb(var(--c-coal));
+  padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.empty-state::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgb(var(--c-dot)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.35;
+}
+
+.empty-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  border: 1px solid rgb(var(--c-ash));
+  border-radius: 16px;
+  background: rgb(var(--c-dot));
+  color: rgb(var(--c-muted));
+}
+
+.empty-state > p {
+  position: relative;
+}
+
+/* ---- Drawer móvil ---- */
+#mobile-drawer:not([hidden]) nav {
+  animation: drawer-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ================= FASE 3 — CLASIFICAR ================= */
+
+/* ---- Skeleton loading (pulso sutil, sin shimmer) ---- */
+.skeleton {
+  background: rgb(var(--c-dot));
+  animation: skeleton-pulse 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+/* ---- Barra de confianza: único gradiente permitido (#CCFF5C -> #161616).
+   Animación con transform (scaleX) para no provocar layout thrash. */
+.confianza-bar {
+  background: linear-gradient(90deg, #CCFF5C, #161616);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Input inválido (flash) ---- */
+.input-invalid {
+  border-color: rgb(var(--c-err)) !important;
+  animation: input-flash 0.6s ease-out;
+}
+
+@keyframes input-flash {
+  0%   { box-shadow: 0 0 0 4px rgb(var(--c-err) / 0.25); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ---- Contenedor del thinking orb ---- */
+.orb-container {
+  display: grid;
+  place-items: center;
+  height: 120px;
+}
+
+/* ---- Selects ----
+   Estilo único para todos los <select>: flecha SVG custom (coherente con
+   el mundo Volt, sin depender de la flecha nativa del sistema), borde,
+   hover y focus. El border-radius viene de la clase inline de cada uno.
+   NOTA: el color de la flecha va hardcodeado por tema porque `currentColor`
+   no se resuelve dentro de un SVG en background-image (quedaría negra fija
+   y desaparecería en modo oscuro). Valores = --c-muted de cada tema. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 40px;
+  border: 1px solid rgb(var(--c-ash));
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:root[data-theme="light"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236a6a64' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select:hover {
+  border-color: rgb(var(--c-muted));
+}
+select:focus {
+  border-color: rgb(var(--c-volt));
+  outline: none;
+}
+select option {
+  background-color: rgb(var(--c-coal));
+  color: rgb(var(--c-paper));
+}
+
+/* ---- Toggle de streaming (demo) ----
+   Checkbox accesible, apariencia táctil: track ash + thumb volt. */
+.demo-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 36px;
+  height: 20px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-ash));
+  background: rgb(var(--c-dot));
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.demo-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: rgb(var(--c-muted));
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.demo-toggle:checked {
+  background: rgb(var(--c-void));
+  border-color: rgb(var(--c-volt));
+}
+.demo-toggle:checked::after {
+  transform: translateX(16px);
+  background: rgb(var(--c-volt));
+}
+.demo-toggle:focus-visible {
+  outline: 2px solid rgb(var(--c-volt));
+  outline-offset: 2px;
+}
+
+/* ================= EFECTO DE TEMA — circle-blur-top-left =================
+   Basado en https://github.com/rudrodip/theme-toggle-effect (MIT).
+   Dispara con document.startViewTransition desde js/theme.js. */
+::view-transition-group(root) {
+  animation-timing-function: var(--expo-out);
+}
+::view-transition-new(root) {
+  mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><filter id="blur"><feGaussianBlur stdDeviation="2"/></filter></defs><circle cx="0" cy="0" r="18" fill="white" filter="url(%23blur)"/></svg>') top left / 0 no-repeat;
+  mask-origin: content-box;
+  animation: vt-scale 1s;
+  animation-fill-mode: both;
+  transform-origin: top left;
+}
+::view-transition-old(root) {
+  animation: vt-scale 1s;
+  animation-fill-mode: both;
+  transform-origin: top left;
+  z-index: -1;
+}
+@keyframes vt-scale {
+  to { mask-size: 350vmax; }
+}
+
+/* =========== EFECTO DE TRANSSICION ICON =========== */
+/* Animación del badge alternante (Ciclo de 10 segundos: 5s GitHub, 5s LinkedIn) */
+@keyframes badgeSlideFirst {
+  0%, 45% {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  50%, 95% {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+}
+
+@keyframes badgeSlideSecond {
+  0%, 45% {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+  }
+  50%, 95% {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+  }
+}
+
+.animate-badge-github {
+  animation: badgeSlideFirst 10s infinite ease-in-out;
+}
+
+.animate-badge-linkedin {
+  animation: badgeSlideSecond 10s infinite ease-in-out;
+}
+
+/* ================= ACCESIBILIDAD ================= */
+@media (prefers-reduced-motion: reduce) {
+  .splash-brand,
+  #splash-team > li {
+    animation: none;
+    opacity: 1;
+  }
+  #splash.exit { transition: none; }
+  #app.revealed { animation: none; }
+  .skeleton { animation: none; opacity: 0.6; }
+  .input-invalid { animation: none; box-shadow: none; }
+  .view-enter,
+  .view-leave { animation: none; }
+  #mobile-drawer:not([hidden]) nav { animation: none; }
+  ::view-transition-new(root),
+  ::view-transition-old(root) { animation: none; }
+}
