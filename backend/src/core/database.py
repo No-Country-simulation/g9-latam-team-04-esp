@@ -917,8 +917,8 @@ def exportar_dataset(
     """
     Exporta contenidos clasificados como dataset de entrenamiento.
 
-    Devuelve filas con ``titulo``, ``texto`` y ``categoria`` (la vigente,
-    es decir la última corrección humana si la hubo).
+    Devuelve filas con ``titulo``, ``texto``, ``categoria`` e ``idioma``
+    (la vigente, es decir la última corrección humana si la hubo).
 
     Parameters
     ----------
@@ -932,7 +932,7 @@ def exportar_dataset(
     Returns
     -------
     list[dict]
-        Lista de filas ``{"titulo", "texto", "categoria"}``.
+        Lista de filas ``{"titulo", "texto", "categoria", "idioma"}``.
     """
     conditions: list[str] = []
     params: dict[str, Any] = {}
@@ -953,7 +953,7 @@ def exportar_dataset(
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(f"""
-                SELECT c.titulo, c.texto, cat.nombre AS categoria
+                SELECT c.titulo, c.texto, cat.nombre AS categoria, c.idioma
                 FROM contenidos c
                 JOIN clasificaciones cl ON cl.contenido_id = c.id
                 JOIN categorias cat ON cl.categoria_id = cat.id
@@ -964,8 +964,8 @@ def exportar_dataset(
             # Leer los CLOB DENTRO de la conexión: oracledb los resuelve de forma
             # perezosa y hace .read() con la conexión ya cerrada tira
             # DPY-1001 (not connected to database).
-            for titulo, texto_raw, categoria in cursor:
+            for titulo, texto_raw, categoria, idioma_row in cursor:
                 texto = texto_raw.read() if hasattr(texto_raw, "read") else str(texto_raw)
-                items.append({"titulo": titulo, "texto": texto, "categoria": categoria})
+                items.append({"titulo": titulo, "texto": texto, "categoria": categoria, "idioma": idioma_row})
 
     return items
