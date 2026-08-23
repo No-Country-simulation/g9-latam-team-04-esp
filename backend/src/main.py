@@ -1,5 +1,5 @@
 """
-TechMind API - Organizador Inteligente de Conocimiento Técnico.
+TechMind API - El cerebro que entiende tu contenido técnico. La API, lo comparte
 
 FastAPI application entry point.
 """

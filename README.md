@@ -1,4 +1,4 @@
-# TechMind — Organizador Inteligente de Conocimiento Técnico
+# TechMind — El cerebro que entiende tu contenido técnico. La API, lo comparte
 
 API inteligente + app web para organizar contenido técnico mediante clasificación automática, extracción de términos clave, búsqueda semántica y retroalimentación humana para reentrenar los modelos. Todo expuesto en JSON, listo para integrarse con plataformas educativas, comunidades técnicas y repositorios de conocimiento.
 
