@@ -316,6 +316,8 @@ Documentación adicional del equipo dentro de [`docs/`](docs/):
 | [Guía rápida de Git](docs/git-guia-rapida.md) | Comandos esenciales y flujo de trabajo diario con Git. |
 | [Patrones de desarrollo](docs/development-patterns.md) | Índice de patrones: git workflow, issues, branches, commits y PRs. |
 | [Contrato de API](docs/api-contract.md) | Contrato formal de la API: rutas, payloads y códigos de respuesta. |
+| [Despliegue de Infraestructura Cloud en OCI](https://github.com/No-Country-simulation/g9-latam-team-04-esp/blob/main/docs/Despliegue%20de%20Infraestructura%20Cloud%20en%20OCI.md) | Documentación de OCI. |
+| [Guía de ejecución Docker](https://github.com/No-Country-simulation/g9-latam-team-04-esp/blob/main/docs/GUIA-EJECUCION.md) | Procedimiento paso a paso de ejecución Docker |
 | [Runbook de reentrenamiento](docs/runbook-reentrenamiento.md) | Procedimiento paso a paso para reentrenar los modelos. |
 | [Reporte de testing de endpoints](docs/reporte-testing-endpoints.md) | Resultados del testing exploratorio sobre los endpoints. |
 
