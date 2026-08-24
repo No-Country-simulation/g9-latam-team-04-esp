@@ -1,0 +1,127 @@
+services:
+  # Base de Datos Relacional Oracle (Free / XE)
+  oracle-db:
+    image: gvenzl/oracle-free:23-slim
+    container_name: oracle_techknowledge
+    restart: always
+    environment:
+      ORACLE_PASSWORD: ${TK_ORACLE_PASSWORD:-root_password}
+      APP_USER: ${TK_ORACLE_USER:-api_user}
+      APP_USER_PASSWORD: ${TK_ORACLE_PASSWORD:-api_password}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    networks:
+      - tech_network
+
+  # Almacenamiento de Modelos (Simulación de OCI Object Storage)
+  model-storage:
+    image: minio/minio:latest
+    container_name: minio_storage
+    environment:
+      MINIO_ROOT_USER: ${TK_MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${TK_MINIO_ROOT_PASSWORD:-password123}
+    ports:
+      - "9000:9000" # API REST S3/OCI
+      - "9001:9001" # Consola Web
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - tech_network
+
+  # Backend API (Lógica de negocio y persistencia)
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: api_principal
+    # Asigna el UID/GID del script en Linux, o 1000:1000 en Windows/macOS
+    user: "${CURRENT_UID:-1000}:${CURRENT_GID:-1000}"
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      # --- Variables de Entorno TK_ (leídas desde .env) ---
+      # NOTA: PYTHONDONTWRITEBYTECODE y PYTHONUNBUFFERED están en el Dockerfile
+      - TK_DEBUG=${TK_DEBUG:-false}
+      - TK_HOST=${TK_HOST:-0.0.0.0}
+      - TK_PORT=${TK_PORT:-8000}
+      - TK_CORS_ORIGINS=${TK_CORS_ORIGINS:-["*"]}
+      - TK_ORACLE_USER=${TK_ORACLE_USER}
+      - TK_ORACLE_PASSWORD=${TK_ORACLE_PASSWORD}
+      - TK_ORACLE_DSN=${TK_ORACLE_DSN}
+      - TK_ORACLE_WALLET_DIR=${TK_ORACLE_WALLET_DIR}
+      - TK_ORACLE_WALLET_PASSWORD=${TK_ORACLE_WALLET_PASSWORD}
+      - TK_DEFAULT_LANGUAGE=${TK_DEFAULT_LANGUAGE:-auto}
+      # --- Umbrales y límites de la API ---
+      - TK_CONFIANZA_MINIMA=${TK_CONFIANZA_MINIMA:-0.25}
+      - TK_LOTE_MAXIMO=${TK_LOTE_MAXIMO:-100}
+      - TK_PAGINACION_MAXIMA=${TK_PAGINACION_MAXIMA:-100}
+      - TK_PAGINACION_DEFECTO=${TK_PAGINACION_DEFECTO:-20}
+      # --- Configuración del clasificador ---
+      - TK_TERMINOS_CLAVE_MAXIMOS=${TK_TERMINOS_CLAVE_MAXIMOS:-5}
+      - TK_DETECCION_IDIOMA_MAX_CHARS=${TK_DETECCION_IDIOMA_MAX_CHARS:-500}
+      # --- Configuración de validación ---
+      - TK_VALIDACION_MIN_LONGITUD=${TK_VALIDACION_MIN_LONGITUD:-5}
+      - TK_VALIDACION_MAX_RUIDO=${TK_VALIDACION_MAX_RUIDO:-0.8}
+      # --- Reentrenamiento y administración ---
+      - TK_RETRAIN_MIN_FEEDBACK=${TK_RETRAIN_MIN_FEEDBACK:-50}
+      - TK_RETRAIN_MIN_F1_IMPROVEMENT=${TK_RETRAIN_MIN_F1_IMPROVEMENT:-0.00}
+      - TK_RELOAD_CHECK_INTERVAL_S=${TK_RELOAD_CHECK_INTERVAL_S:-86400}
+      - TK_ADMIN_TOKEN=${TK_ADMIN_TOKEN:-}
+      # --- Rutas configurables (mantienen los valores predeterminados) ---
+      - TK_MODEL_PATH_EN=${TK_MODEL_PATH_EN:-data-science/models/en/model_en.joblib}
+      - TK_VECTORIZER_PATH_EN=${TK_VECTORIZER_PATH_EN:-data-science/models/en/vectorizer_en.joblib}
+      - TK_MODEL_PATH_ES=${TK_MODEL_PATH_ES:-data-science/models/es/model_es.joblib}
+      - TK_VECTORIZER_PATH_ES=${TK_VECTORIZER_PATH_ES:-data-science/models/es/vectorizer_es.joblib}
+      - TK_FEEDBACK_DIR=${TK_FEEDBACK_DIR:-data-science/data/feedback}
+      - TK_METRICS_DIR=${TK_METRICS_DIR:-data-science/models}
+      - TK_RETRAIN_SCRIPT_PATH=${TK_RETRAIN_SCRIPT_PATH:-data-science/scripts/reentrenar.py}
+      # --- OCI Object Storage (opcional) ---
+      - TK_OCI_ENABLED=${TK_OCI_ENABLED:-false}
+      - TK_OCI_CONFIG_PATH=${TK_OCI_CONFIG_PATH:-}
+      - TK_OCI_BUCKET_NAME=${TK_OCI_BUCKET_NAME:-TechMind-models}
+      - TK_OCI_NAMESPACE=${TK_OCI_NAMESPACE:-}
+    volumes:
+      - ./backend/src:/app/src # Live-reloading en desarrollo
+      - ./data-science/models:/app/data-science/models # Modelos de ML (montados externamente)
+      - ./shared:/app/shared # Stop words
+    depends_on:
+      - oracle-db
+    networks:
+      - tech_network
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: web_frontend
+    restart: on-failure
+    ports:
+      - "80:80"
+    environment:
+      - ENVIRONMENT=development
+      - TK_BE_URL=${TK_BE_URL:-http://localhost:8000}
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/js:/usr/share/nginx/html/js:ro
+      - ./frontend/css:/usr/share/nginx/html/css:ro
+      - ./frontend/assets:/usr/share/nginx/html/assets:ro
+      - ./frontend/vendor:/usr/share/nginx/html/vendor:ro
+    depends_on:
+      - backend
+    networks:
+      - tech_network
+
+# Volúmenes persistentes
+volumes:
+  oracle_data:
+  minio_data:
+
+# Red interna
+networks:
+  tech_network:
+    driver: bridge

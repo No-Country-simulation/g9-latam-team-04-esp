@@ -76,9 +76,6 @@ router = APIRouter(
     tags=["contenido"],
 )
 
-# Probabilidad mínima para aceptar una clasificación
-UMBRAL_CONFIANZA: float = 0.25
-
 logger = logging.getLogger(__name__)
 
 @router.post(
@@ -114,14 +111,14 @@ async def clasificar_contenido(body: ContenidoRequest):
             [],
         )
 
-        if resultado["probabilidad"] < UMBRAL_CONFIANZA:
+        if resultado["probabilidad"] < settings.confianza_minima:
 
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
                     "El contenido no pudo clasificarse con suficiente confianza "
                     f"(probabilidad: {resultado['probabilidad']:.4f}, "
-                    f"mínimo requerido: {UMBRAL_CONFIANZA})"
+                    f"mínimo requerido: {settings.confianza_minima})"
                 ),
             )
 
@@ -309,9 +306,9 @@ async def clasificar_lote_csv(
         if len(filas) == 0:
             raise ValueError("El archivo CSV está vacío o no tiene filas de datos")
 
-        if len(filas) > 100:
+        if len(filas) > settings.lote_maximo:
             raise ValueError(
-                f"El CSV contiene {len(filas)} filas. El máximo permitido es 100."
+                f"El CSV contiene {len(filas)} filas. El máximo permitido es {settings.lote_maximo}."
             )
 
         # Validar encabezados requeridos
@@ -414,7 +411,7 @@ async def listar_contenidos_endpoint(
     q: str | None = Query(None, description="Término de búsqueda (busca en título, texto y términos clave)"),
     categoria: str | None = Query(None, description="Filtrar por categoría"),
     pagina: int = Query(1, ge=1, description="Número de página"),
-    limite: int = Query(20, ge=1, le=100, description="Resultados por página"),
+    limite: int = Query(settings.paginacion_defecto, ge=1, le=settings.paginacion_maxima, description="Resultados por página"),
 ):
     """Lista o busca contenidos con filtros opcionales."""
     items, total = await asyncio.to_thread(
@@ -570,13 +567,13 @@ async def actualizar_contenido(
         t["palabra"] for t in terminos
     ]
 
-        if resultado["probabilidad"] < UMBRAL_CONFIANZA:
+        if resultado["probabilidad"] < settings.confianza_minima:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
                     f"El contenido no pudo clasificarse con suficiente confianza "
                     f"(probabilidad: {resultado['probabilidad']:.4f}, "
-                    f"mínimo requerido: {UMBRAL_CONFIANZA})"
+                    f"mínimo requerido: {settings.confianza_minima})"
                 ),
             )
 
@@ -972,10 +969,10 @@ def _clasificar_y_persistir(
 
             # Validar umbral de confianza
             probabilidad = resultado.get("probabilidad", 0.0)
-            if probabilidad < UMBRAL_CONFIANZA:
+            if probabilidad < settings.confianza_minima:
                 raise ValueError(
                     f"El contenido no pudo clasificarse con suficiente confianza "
-                    f"(probabilidad: {probabilidad:.4f}, mínimo requerido: {UMBRAL_CONFIANZA})"
+                    f"(probabilidad: {probabilidad:.4f}, mínimo requerido: {settings.confianza_minima})"
                 )
 
             # Evitar registros duplicados dentro del lote (mismo título + texto)

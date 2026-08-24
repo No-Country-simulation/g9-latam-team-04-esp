@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+spec:
+  type: LoadBalancer # OCI OKE creará un Load Balancer real con IP pública
+  selector:
+    app: techmind-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

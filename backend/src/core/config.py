@@ -11,7 +11,23 @@ class Settings(BaseSettings):
     app_name: str = "TechMind"
     app_version: str = "1.0.0"
     debug: bool = False
-    cors_origins: list[str] = ["http://localhost:5500", "http://127.0.0.1:5500"]
+    cors_origins: list[str] = ["http://localhost:5500", "http://127.0.0.1:5500", "http://localhost", "http://127.0.0.1"]  # Configurable vía TK_CORS_ORIGINS
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+    # Umbrales y límites de la API
+    confianza_minima: float = 0.25  # Probabilidad mínima para aceptar clasificación
+    lote_maximo: int = 100  # Máximo de contenidos en procesamiento por lote
+    paginacion_maxima: int = 100  # Máximo de resultados por página
+    paginacion_defecto: int = 20  # Resultados por página por defecto
+
+    # Configuración del clasificador
+    terminos_clave_maximos: int = 5  # Número máximo de términos clave a extraer
+    deteccion_idioma_max_chars: int = 500  # Caracteres máximos para detección de idioma
+
+    # Configuración de validación
+    validacion_min_longitud: int = 5  # Longitud mínima para validación de contenido
+    validacion_max_ruido: float = 0.8  # Máximo porcentaje de ruido permitido (1.0 - 0.2)
 
     # Modelos de clasificación
     # Inglés
@@ -43,13 +59,15 @@ class Settings(BaseSettings):
     admin_token: str = ""
 
     # Oracle Database
-    oracle_user: str = "USERNAME_SCHEMA_SGOEJ"
+    # Pydantic buscará automáticamente TK_ORACLE_USER, TK_ORACLE_PASSWORD, etc.
+    oracle_user: str = ""
     oracle_password: str = ""
-    oracle_dsn: str = "tcps://db.freesql.com:2484/23ai_34ui2"
+    oracle_dsn: str = ""
     oracle_wallet_dir: str | None = None
     oracle_wallet_password: str | None = None
 
     # OCI Object Storage
+    # Pydantic buscará automáticamente TK_OCI_ENABLED, TK_OCI_BUCKET_NAME, etc.
     oci_enabled: bool = False
     oci_config_path: Path | None = None
     oci_bucket_name: str = "TechMind-models"

@@ -75,7 +75,8 @@ try:
         if not texto.strip():
             return "en"
         try:
-            lang = _detect_lang(texto[:500])
+            max_chars = settings.deteccion_idioma_max_chars
+            lang = _detect_lang(texto[:max_chars])
             return lang if lang in _IDIOMA_MODELO else "en"
         except Exception:
             return "en"
@@ -406,7 +407,7 @@ class ClasificadorService:
     def _extraer_terminos(
         self, modelo: _ModeloIdioma, X: np.ndarray, idioma: str
     ) -> list[dict]:
-        """Devuelve hasta 5 términos NO redundantes con su palabra y peso TF-IDF."""
+        """Devuelve hasta N términos NO redundantes con su palabra y peso TF-IDF."""
         feature_names = modelo.vectorizador.get_feature_names_out()
         indexados = list(enumerate(X.toarray()[0]))
         indexados.sort(key=lambda x: x[1], reverse=True)
@@ -414,6 +415,8 @@ class ClasificadorService:
         stop_words = _STOP_WORDS_POR_IDIOMA.get(idioma, STOP_WORDS_EN)
         terminos: list[dict] = []
         palabras_elegidas: list[str] = []
+
+        max_terminos = settings.terminos_clave_maximos
 
         for i, score in indexados:
             palabra = feature_names[i]
@@ -429,7 +432,7 @@ class ClasificadorService:
                 "peso": round(float(score), 4),
             })
             palabras_elegidas.append(palabra)
-            if len(terminos) >= 5:
+            if len(terminos) >= max_terminos:
                 break
         return terminos
 

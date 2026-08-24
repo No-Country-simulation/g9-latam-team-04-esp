@@ -9,14 +9,7 @@
   <link rel="icon" type="image/png" href="assets/logos/techmind-icon.png">
 
   <!-- Tema temprano: evita flash, arranca en dark (mundo Volt) salvo preferencia guardada -->
-  <script>
-    (function () {
-      try {
-        var theme = localStorage.getItem("techmind-theme");
-        if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
-      } catch (e) { /* sin localStorage: se queda en dark */ }
-    })();
-  </script>
+  <script src="js/tema-temprano.js"></script>
 
   <!-- Preloads: la splash (4-5s) da tiempo; esto baja los assets en paralelo al primer render -->
   <link rel="preload" as="image" href="assets/logos/techmind.png">
@@ -54,6 +47,7 @@
   </script>
 
   <link rel="stylesheet" href="css/app.css">
+  <script src="env-config.js"></script>
 </head>
 <body class="bg-void text-paper font-sans antialiased">
 

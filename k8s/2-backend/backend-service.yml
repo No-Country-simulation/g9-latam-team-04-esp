@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-api-svc
+spec:
+  selector:
+    app: techmind-backend # Conecta este servicio con los pods del deployment anterior
+  ports:
+    - protocol: TCP
+      port: 8000        # El puerto que expone el servicio en la red interna de K8s
+      targetPort: 8000  # El puerto interno del contenedor de FastAPI

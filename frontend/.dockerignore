@@ -1,0 +1,47 @@
+# Node modules (si los hubiera)
+node_modules/
+npm-debug.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+docs/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+compose.yml
+
+# Scripts de despliegue
+techmind.sh
+techmind.ps1
+
+# Kubernetes
+k8s/
+
+# Development files
+README*
+GUIA*
+PARAMETRIZACION*
+ANALISIS*

@@ -4,6 +4,8 @@ Validadores de contenido reutilizables entre distintos esquemas.
 import re
 import unicodedata
 
+from ...core.config import settings
+
 PATRON_REPETITIVO = re.compile(r"(.)\1{5,}")
 PATRON_LETRAS = re.compile(r"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]")
 PATRON_CARACTERES_CONTROL = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F]")
@@ -70,10 +72,13 @@ def rechazar_solo_especiales(v: str) -> str:
 
 
 def rechazar_demasiado_ruido(v: str) -> str:
-    """Rechaza contenido donde más del 80% son caracteres no alfanuméricos."""
-    if len(v) > 5:
+    """Rechaza contenido donde más del X% son caracteres no alfanuméricos."""
+    min_longitud = settings.validacion_min_longitud
+    max_ruido = settings.validacion_max_ruido
+
+    if len(v) > min_longitud:
         alfanum_o_espacio = sum(1 for c in v if c.isalnum() or c.isspace())
-        if alfanum_o_espacio / len(v) < 0.2:
+        if alfanum_o_espacio / len(v) < (1.0 - max_ruido):
             raise ValueError("contiene demasiados caracteres especiales sin significado")
     return v
 

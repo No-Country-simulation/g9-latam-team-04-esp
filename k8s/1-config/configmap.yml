@@ -1,0 +1,46 @@
+# ConfigMap para variables de entorno no sensibles
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: techknowledge-config
+  namespace: default
+data:
+  # Variables de entorno Python (buenas prácticas Docker)
+  # NOTA: En K8s estas variables deben estar explícitamente ya que los pods
+  # no heredan automáticamente los ENV del Dockerfile como en Docker Compose
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+  # Configuración del Backend
+  TK_DEBUG: "false"
+  TK_HOST: "0.0.0.0"
+  TK_PORT: "8000"
+  TK_CORS_ORIGINS: '["https://tu-dominio.com"]'  # CAMBIAR al dominio real
+  TK_DEFAULT_LANGUAGE: "auto"
+
+  # Configuración del Frontend
+  TK_BE_URL: "http://backend-api-svc:8000"  # Servicio interno de K8s
+
+  # Umbrales y límites de la API
+  TK_CONFIANZA_MINIMA: "0.25"
+  TK_LOTE_MAXIMO: "100"
+  TK_PAGINACION_MAXIMA: "100"
+  TK_PAGINACION_DEFECTO: "20"
+
+  # Configuración del clasificador
+  TK_TERMINOS_CLAVE_MAXIMOS: "5"
+  TK_DETECCION_IDIOMA_MAX_CHARS: "500"
+
+  # Configuración de validación
+  TK_VALIDACION_MIN_LONGITUD: "5"
+  TK_VALIDACION_MAX_RUIDO: "0.8"
+
+  # Configuración de Reentrenamiento
+  TK_RETRAIN_MIN_FEEDBACK: "50"
+  TK_RETRAIN_MIN_F1_IMPROVEMENT: "0.02"
+  TK_RELOAD_CHECK_INTERVAL_S: "86400"
+
+  # OCI Object Storage (Configuración específica OCI nativo - opcional)
+  TK_OCI_ENABLED: "false"
+  TK_OCI_BUCKET_NAME: ""
+  TK_OCI_NAMESPACE: ""

@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: techknowledge-backend
+spec:
+  replicas: 2 # ¡Acá podés decirle que levante 2 contenedores iguales para balancear la carga!
+  selector:
+    matchLabels:
+      app: techknowledge-backend
+  template:
+    metadata:
+      labels:
+        app: techknowledge-backend
+    spec:
+      containers:
+      - name: backend
+        # CAMBIAR: Imagen real de Docker Hub u OCI Registry
+        image: gabrielsorrentino/backend-techmind-hackaton:latest
+        ports:
+        - containerPort: 8000
+        env:
+        # Variables de entorno Python (buenas prácticas Docker)
+        - name: PYTHONDONTWRITEBYTECODE
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: PYTHONDONTWRITEBYTECODE
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: PYTHONUNBUFFERED
+        # Variables desde ConfigMap
+        - name: TK_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_DEBUG
+        - name: TK_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_HOST
+        - name: TK_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_PORT
+        - name: TK_CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_CORS_ORIGINS
+        - name: TK_DEFAULT_LANGUAGE
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_DEFAULT_LANGUAGE
+        # Umbrales y límites de la API
+        - name: TK_CONFIANZA_MINIMA
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_CONFIANZA_MINIMA
+        - name: TK_LOTE_MAXIMO
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_LOTE_MAXIMO
+        - name: TK_PAGINACION_MAXIMA
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_PAGINACION_MAXIMA
+        - name: TK_PAGINACION_DEFECTO
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_PAGINACION_DEFECTO
+        # Configuración del clasificador
+        - name: TK_TERMINOS_CLAVE_MAXIMOS
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_TERMINOS_CLAVE_MAXIMOS
+        - name: TK_DETECCION_IDIOMA_MAX_CHARS
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_DETECCION_IDIOMA_MAX_CHARS
+        # Configuración de validación
+        - name: TK_VALIDACION_MIN_LONGITUD
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_VALIDACION_MIN_LONGITUD
+        - name: TK_VALIDACION_MAX_RUIDO
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_VALIDACION_MAX_RUIDO
+        # Configuración de Reentrenamiento
+        - name: TK_RETRAIN_MIN_FEEDBACK
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_RETRAIN_MIN_FEEDBACK
+        - name: TK_RETRAIN_MIN_F1_IMPROVEMENT
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_RETRAIN_MIN_F1_IMPROVEMENT
+        - name: TK_RELOAD_CHECK_INTERVAL_S
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_RELOAD_CHECK_INTERVAL_S
+        # OCI Object Storage
+        - name: TK_OCI_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_OCI_ENABLED
+        - name: TK_OCI_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_OCI_BUCKET_NAME
+        - name: TK_OCI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: techknowledge-config
+              key: TK_OCI_NAMESPACE
+        # Variables sensibles desde Secret
+        - name: TK_ORACLE_USER
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ORACLE_USER
+        - name: TK_ORACLE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ORACLE_PASSWORD
+        - name: TK_ORACLE_DSN
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ORACLE_DSN
+        - name: TK_ORACLE_WALLET_DIR
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ORACLE_WALLET_DIR
+        - name: TK_ORACLE_WALLET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ORACLE_WALLET_PASSWORD
+        # OCI Config y Token Admin
+        - name: TK_OCI_CONFIG_PATH
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_OCI_CONFIG_PATH
+        - name: TK_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: techknowledge-secrets
+              key: TK_ADMIN_TOKEN
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

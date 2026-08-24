@@ -36,6 +36,15 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 
+# Frontend
+frontend/env-config.js
+
+# Oracle Wallet (NO subir al repo)
+oracle-wallet/
+*.sso
+*.p12
+tnsnames.ora
+
 # Docs
 # Herramienta local impeccable (sketches y dirección visual)
 .impeccable/

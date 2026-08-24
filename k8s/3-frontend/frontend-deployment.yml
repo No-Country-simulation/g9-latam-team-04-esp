@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: techmind-frontend
+spec:
+  replicas: 2 # Podemos tener 2 Pods para alta disponibilidad
+  selector:
+    matchLabels:
+      app: techmind-frontend
+  template:
+    metadata:
+      labels:
+        app: techmind-frontend
+    spec:
+      containers:
+      - name: frontend
+        # CAMBIAR: Imagen real de Docker Hub u OCI Registry
+        image: gabrielsorrentino/frontend-techmind-hackaton:latest
+        ports:
+        - containerPort: 80
+        env:
+        # Variable desde ConfigMap para el script env.sh
+        - name: TK_BE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: techmind-config
+              key: TK_BE_URL
+        # Nginx consume poquísimos recursos
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
